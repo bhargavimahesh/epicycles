@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Ink with Epicycles</title>
+        <style>
+            body {margin: 0; background: #eef0ea; font-family: system-ui,  sans-serif;}
+            canvas {display: block; margin: 16px auto; background: white; height: 85vh; max-width: 95vw;}
+
+        </style>
+    </head>
+
+    <body>
+        <canvas id="sheet" width="1080" height="1920"></canvas>
+        <script>
+            const canvas = document.getElementById("sheet");
+            const ctx = canvas.getContext("2d");
+
+            ctx.font = "80px system-ui";
+            ctx.fillText("Hello, it's Inktober again!", 100, 860);
+
+        </script>
+    </body>
+</html>
+
