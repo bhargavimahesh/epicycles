@@ -18,53 +18,66 @@
             const ctx = canvas.getContext("2d");
 
             const cx = 540, cy = 960; //centre of the sheet
-            const radius = 300; // length of the arrow in pixels
-            const radius1 = 150; // length of the arrow in pixels
-            const speed = 0.5; // turns per second
-            const speed1 = 1; // turns per second
-            const startAngle = 0; // in radians
+
+            // Each arrow: radius in pixels, speed in turns per second, start angle in radians
+            const arrows = [
+            { radius: 300, speed: 0.5, start: 0 },
+            { radius: 150, speed: -1,   start: 0 },
+            { radius: 50, speed: 2, start: 0 },  
+            { radius: 10, speed: 2, start: 0 },   
+            { radius: 60, speed: 2, start: 0 },   
+            ]; // radius: length of the arrow in pixels; speed: turns per second; start: startangle in radians
+
+            const trail = [];                    // the pen's recent positions
+            const MAX_TRAIL = 600;               // keep at most this many points
+            let startTime = null;                // set on the first frame
+    
+            // Draws one arrow: its grey circle, the arrow itself, and a red dot at its tip
+            function drawArrow(fromX, fromY, toX, toY, r) {
+            ctx.strokeStyle = "#bbbbbb"; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.arc(fromX, fromY, r, 0, 2 * Math.PI); ctx.stroke();
+
+            ctx.strokeStyle = "#16203a"; ctx.lineWidth = 8;
+            ctx.beginPath(); ctx.moveTo(fromX, fromY); ctx.lineTo(toX, toY); ctx.stroke();
+
+            ctx.fillStyle = "crimson";
+            ctx.beginPath(); ctx.arc(toX, toY, 16, 0, 2 * Math.PI); ctx.fill();
+            }
+
+            // Draws the path the pen has travelled
+            function drawTrail() {
+            ctx.strokeStyle = "crimson"; ctx.lineWidth = 3;
+            ctx.beginPath();
+            trail.forEach(([px, py], i) => i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py));
+            ctx.stroke();
+            }
 
             function draw(timeMs) {
-                const t = timeMs/1000; // time in seconds, since page loaded
-                const angle = startAngle + 2 * Math.PI * speed * t;
-                const angle1 = startAngle + 2 * Math.PI * speed1 * t;
-                const x = cx + radius * Math.cos(angle);
-                const y = cy + radius * Math.sin(angle);
+            if (startTime === null) startTime = timeMs;     // first frame: start the stopwatch
+            const t = (timeMs - startTime) / 1000;          // seconds since the animation began
 
-                const x1 = x + radius1 * Math.cos(angle1);
-                const y1 = y + radius1 * Math.sin(angle1);
-               
-                ctx.clearRect(0, 0, canvas.width, canvas.height); // wipe the last frame
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                ctx.strokeStyle = "#bbbbbb"; ctx.lineWidth = 4;           // the circle the tip travels on
-                ctx.beginPath(); ctx.arc(cx, cy, radius, 0, 2 * Math.PI); ctx.stroke();
+            // Walk along the chain: each arrow starts where the previous one ended
+            let px = cx, py = cy;
+            for (const a of arrows) {
+                const angle = a.start + 2 * Math.PI * a.speed * t;
+                const tipX = px + a.radius * Math.cos(angle);
+                const tipY = py - a.radius * Math.sin(angle);  // minus: anticlockwise on screen
+                drawArrow(px, py, tipX, tipY, a.radius);
+                px = tipX;                                     // the next arrow starts here
+                py = tipY;
+            }
 
-                ctx.strokeStyle = "#16203a"; ctx.lineWidth = 8;           // the arrow
-                ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, y); ctx.stroke();
+            // After the loop, (px, py) is the pen
+            trail.push([px, py]);
+            if (trail.length > MAX_TRAIL) trail.shift();     // drop the oldest point
+            drawTrail();
 
-                ctx.fillStyle = "crimson";                                // the tip
-                ctx.beginPath(); ctx.arc(x, y, 16, 0, 2 * Math.PI); ctx.fill();
-
-                // circle 2
-                ctx.strokeStyle = "#bbbbbb"; ctx.lineWidth = 4;           // the circle the tip travels on
-                ctx.beginPath(); ctx.arc(x, y, radius1, 0, 2 * Math.PI); ctx.stroke();
-
-                ctx.strokeStyle = "#16203a"; ctx.lineWidth = 8;           // the arrow
-                ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x1, y1); ctx.stroke();
-
-                ctx.fillStyle = "crimson";                                // the tip
-                ctx.beginPath(); ctx.arc(x1, y1, 16, 0, 2 * Math.PI); ctx.fill();
-
-            requestAnimationFrame(draw);                              // ...and again, next frame
+            requestAnimationFrame(draw);
             }
 
             requestAnimationFrame(draw);
-
-
-
-            
-
-
         </script>
     </body>
 </html>
