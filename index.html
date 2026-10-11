@@ -17,8 +17,53 @@
             const canvas = document.getElementById("sheet");
             const ctx = canvas.getContext("2d");
 
-            ctx.font = "80px system-ui";
-            ctx.fillText("Hello, it's Inktober again!", 100, 860);
+            const cx = 540, cy = 960; //centre of the sheet
+            const radius = 300; // length of the arrow in pixels
+            const radius1 = 150; // length of the arrow in pixels
+            const speed = 0.5; // turns per second
+            const speed1 = 1; // turns per second
+            const startAngle = 0; // in radians
+
+            function draw(timeMs) {
+                const t = timeMs/1000; // time in seconds, since page loaded
+                const angle = startAngle + 2 * Math.PI * speed * t;
+                const angle1 = startAngle + 2 * Math.PI * speed1 * t;
+                const x = cx + radius * Math.cos(angle);
+                const y = cy + radius * Math.sin(angle);
+
+                const x1 = x + radius1 * Math.cos(angle1);
+                const y1 = y + radius1 * Math.sin(angle1);
+               
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // wipe the last frame
+
+                ctx.strokeStyle = "#bbbbbb"; ctx.lineWidth = 4;           // the circle the tip travels on
+                ctx.beginPath(); ctx.arc(cx, cy, radius, 0, 2 * Math.PI); ctx.stroke();
+
+                ctx.strokeStyle = "#16203a"; ctx.lineWidth = 8;           // the arrow
+                ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, y); ctx.stroke();
+
+                ctx.fillStyle = "crimson";                                // the tip
+                ctx.beginPath(); ctx.arc(x, y, 16, 0, 2 * Math.PI); ctx.fill();
+
+                // circle 2
+                ctx.strokeStyle = "#bbbbbb"; ctx.lineWidth = 4;           // the circle the tip travels on
+                ctx.beginPath(); ctx.arc(x, y, radius1, 0, 2 * Math.PI); ctx.stroke();
+
+                ctx.strokeStyle = "#16203a"; ctx.lineWidth = 8;           // the arrow
+                ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x1, y1); ctx.stroke();
+
+                ctx.fillStyle = "crimson";                                // the tip
+                ctx.beginPath(); ctx.arc(x1, y1, 16, 0, 2 * Math.PI); ctx.fill();
+
+            requestAnimationFrame(draw);                              // ...and again, next frame
+            }
+
+            requestAnimationFrame(draw);
+
+
+
+            
+
 
         </script>
     </body>
