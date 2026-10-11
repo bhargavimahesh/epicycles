@@ -1,84 +1,49 @@
 <!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Ink with Epicycles</title>
-        <style>
-            body {margin: 0; background: #eef0ea; font-family: system-ui,  sans-serif;}
-            canvas {display: block; margin: 16px auto; background: white; height: 85vh; max-width: 95vw;}
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Epicycle Ink</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Spinning arrows</h1>
+    <p>Each arrow spins around the tip of the arrow before it. The last tip holds a pen.
+       Change the arrows and see what the pen draws.</p>
+  </header>
 
-        </style>
-    </head>
+  <main>
+    <canvas id="sheet" width="1200" height="1200"></canvas>
 
-    <body>
-        <canvas id="sheet" width="1080" height="1920"></canvas>
-        <script>
-            const canvas = document.getElementById("sheet");
-            const ctx = canvas.getContext("2d");
+    <section class="panel">
+      <div class="row">
+        <button id="play">Pause</button>
+        <label class="slider">
+          <span>Time per lap</span>
+          <input type="range" id="lapTime" min="2" max="20" step="1" value="8">
+          <output id="lapOut">8 s</output>
+        </label>
+      </div>
 
-            const cx = 540, cy = 960; //centre of the sheet
+      <div id="arrowList"></div>
+      <button id="add" class="primary">+ Add an arrow</button>
 
-            // Each arrow: radius in pixels, speed in turns per second, start angle in radians
-            const arrows = [
-            { radius: 300, speed: 0.5, start: 0 },
-            { radius: 150, speed: -1,   start: 0 },
-            { radius: 50, speed: 2, start: 0 },  
-            { radius: 10, speed: 2, start: 0 },   
-            { radius: 60, speed: 2, start: 0 },   
-            ]; // radius: length of the arrow in pixels; speed: turns per second; start: startangle in radians
+      <div class="row presets">
+        <span>Try:</span>
+        <button data-preset="circle">Circle</button>
+        <button data-preset="ellipse">Oval</button>
+        <button data-preset="heart">Heart</button>
+        <button data-preset="triangle">Triangle</button>
+        <button data-preset="square">Square</button>
+        <button data-preset="flower">Flower</button>
+      </div>
 
-            const trail = [];                    // the pen's recent positions
-            const MAX_TRAIL = 600;               // keep at most this many points
-            let startTime = null;                // set on the first frame
-    
-            // Draws one arrow: its grey circle, the arrow itself, and a red dot at its tip
-            function drawArrow(fromX, fromY, toX, toY, r) {
-            ctx.strokeStyle = "#bbbbbb"; ctx.lineWidth = 4;
-            ctx.beginPath(); ctx.arc(fromX, fromY, r, 0, 2 * Math.PI); ctx.stroke();
+      <p class="challenge"><strong>Challenge:</strong> Triangle uses speeds 1 and −2. Square uses 1 and −3.
+        Can you make a star with 5 corners?</p>
+    </section>
+  </main>
 
-            ctx.strokeStyle = "#16203a"; ctx.lineWidth = 8;
-            ctx.beginPath(); ctx.moveTo(fromX, fromY); ctx.lineTo(toX, toY); ctx.stroke();
-
-            ctx.fillStyle = "crimson";
-            ctx.beginPath(); ctx.arc(toX, toY, 16, 0, 2 * Math.PI); ctx.fill();
-            }
-
-            // Draws the path the pen has travelled
-            function drawTrail() {
-            ctx.strokeStyle = "crimson"; ctx.lineWidth = 3;
-            ctx.beginPath();
-            trail.forEach(([px, py], i) => i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py));
-            ctx.stroke();
-            }
-
-            function draw(timeMs) {
-            if (startTime === null) startTime = timeMs;     // first frame: start the stopwatch
-            const t = (timeMs - startTime) / 1000;          // seconds since the animation began
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Walk along the chain: each arrow starts where the previous one ended
-            let px = cx, py = cy;
-            for (const a of arrows) {
-                const angle = a.start + 2 * Math.PI * a.speed * t;
-                const tipX = px + a.radius * Math.cos(angle);
-                const tipY = py - a.radius * Math.sin(angle);  // minus: anticlockwise on screen
-                drawArrow(px, py, tipX, tipY, a.radius);
-                px = tipX;                                     // the next arrow starts here
-                py = tipY;
-            }
-
-            // After the loop, (px, py) is the pen
-            trail.push([px, py]);
-            if (trail.length > MAX_TRAIL) trail.shift();     // drop the oldest point
-            drawTrail();
-
-            requestAnimationFrame(draw);
-            }
-
-            requestAnimationFrame(draw);
-        </script>
-    </body>
+  <script src="epicycles.js"></script>
+</body>
 </html>
-
