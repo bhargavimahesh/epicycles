@@ -8,9 +8,9 @@
 </head>
 <body>
   <header>
-    <h1>Spinning arrows</h1>
-    <p>Each arrow spins around the tip of the arrow before it. The last tip holds a pen.
-       Change the arrows and see what the pen draws.</p>
+    <h1>Spinning circles</h1>
+    <p>Each circle spins around the tip of the circle before it. The last tip holds a pen.
+       Change the circle parameters and see what the pen draws.</p>
   </header>
 
   <main>
@@ -19,6 +19,7 @@
     <section class="panel">
       <div class="row">
         <button id="play">Pause</button>
+        <button id="record">Record reel</button>
         <label class="slider">
           <span>Time per lap</span>
           <input type="range" id="lapTime" min="2" max="20" step="1" value="8">
@@ -27,7 +28,7 @@
       </div>
 
       <div id="arrowList"></div>
-      <button id="add" class="primary">+ Add an arrow</button>
+      <button id="add" class="primary">+ Add a circle</button>
 
       <div class="row presets">
         <span>Try:</span>

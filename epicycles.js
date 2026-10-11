@@ -111,6 +111,7 @@ function tick(timeMs) {
   if (playing) lap = (lap + dt / lapSeconds) % 1;
 
   drawFrame();
+  if (recorder) drawReelFrame();
   requestAnimationFrame(tick);
 }
 
@@ -138,12 +139,12 @@ function renderControls() {
     card.style.setProperty("--c", COLOURS[i]);
     card.innerHTML = `
       <div class="arrow-head">
-        <span class="dot"></span><strong>Arrow ${i + 1}</strong>
-        <button class="remove" aria-label="Remove arrow ${i + 1}">✕</button>
+        <span class="dot"></span><strong>Circle ${i + 1}</strong>
+        <button class="remove" aria-label="Remove circle ${i + 1}">✕</button>
       </div>
-      ${slider("radius", "Length", 10, 400, 5, a.radius, "")}
-      ${slider("speed", "Turns per lap", -6, 6, 1, a.speed, "")}
-      ${slider("start", "Start angle", 0, 345, 15, a.start, "°")}`;
+      ${slider("radius", "Radius", 10, 400, 5, a.radius, "")}
+      ${slider("speed", "Speed", -6, 6, 1, a.speed, "")}
+      ${slider("start", "Starting position", 0, 345, 15, a.start, "°")}`;
 
     // Moving a slider changes this arrow and redraws the path
     card.querySelectorAll("input").forEach(input => {
@@ -198,6 +199,45 @@ lapTime.addEventListener("input", () => {
   document.getElementById("lapOut").textContent = lapTime.value + " s";
 });
 
+// ---------- recording a Reel ----------
+const reel = document.createElement("canvas");      // a 9:16 canvas only the recorder sees
+reel.width = 1080;
+reel.height = 1920;
+const reelCtx = reel.getContext("2d");
+let recorder = null;                                 // null means "not recording"
+
+function drawReelFrame() {
+  reelCtx.fillStyle = "white";
+  reelCtx.fillRect(0, 0, 1080, 1920);
+  reelCtx.drawImage(canvas, 0, 420, 1080, 1080);     // the square drawing, in the middle
+  reelCtx.fillStyle = "#16203a";
+  reelCtx.font = "bold 64px system-ui";
+  reelCtx.textAlign = "center";
+  reelCtx.fillText("Spinning circles", 540, 340);
+}
+
+document.getElementById("record").addEventListener("click", () => {
+  if (recorder) return;                              // already recording
+  const type = MediaRecorder.isTypeSupported("video/mp4") ? "video/mp4" : "video/webm";
+  const chunks = [];
+
+  recorder = new MediaRecorder(reel.captureStream(60), { mimeType: type, videoBitsPerSecond: 8000000 });
+  recorder.ondataavailable = e => chunks.push(e.data);
+  recorder.onstop = () => {
+    const video = new Blob(chunks, { type: type });  // glue the pieces into one file
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(video);
+    link.download = "spinning-circles." + (type === "video/mp4" ? "mp4" : "webm");
+    link.click();                                    // offer the file to the visitor
+    recorder = null;
+  };
+
+  lap = 0;                                           // start from the beginning of the shape
+  playing = true;
+  recorder.start();
+  const lapSeconds = Number(document.getElementById("lapTime").value);
+  setTimeout(() => recorder.stop(), lapSeconds * 1000 );   // one lap, plus 1 s to admire it
+});
 
 // ---------- start ----------
 arrows = PRESETS.heart.map(a => ({ ...a }));
