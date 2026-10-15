@@ -71,3 +71,5 @@ button.primary { background: #16203a; color: white; }
 button:disabled { opacity: 0.35; cursor: default; }
 
 .challenge { margin: 0; padding: 10px 12px; background: #fff7d6; border-radius: 8px; }
+
+#pad { touch-action: none; cursor: crosshair; }
