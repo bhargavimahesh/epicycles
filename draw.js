@@ -14,6 +14,10 @@ let circles = null;   // the circles Fourier found (null while you are drawing)
 let path = [];        // the line the circles draw in one lap, in maths coordinates
 let lap = 0;          // how far through the lap we are, 0 to 1
 let lastTime = null;
+let allCircles = [];  // every circle Fourier found: the still one first, then biggest first
+
+const countSlider = document.getElementById("count");
+const countOut = document.getElementById("countOut");
 
 // Turn a position on the screen into canvas pixels
 function toCanvas(event) {
@@ -23,14 +27,27 @@ function toCanvas(event) {
   return [x, y];
 }
 
-// ---------- when you lift the pen: let Fourier find the circles ----------
+// ---------- when you lift the pen: let Fourier find ALL the circles (once) ----------
 function findCircles() {
   if (points.length < 2) return;
   const even = resample(points, N);
   // maths coordinates: origin in the middle of the canvas, y pointing up
   const centred = even.map(([x, y]) => [x - CENTRE, CENTRE - y]);
-  circles = dft(centred, MAX_SPEED);
-  circles.sort((a, b) => b.radius - a.radius);        // biggest circle first
+  allCircles = dft(centred, MAX_SPEED);
+  // the circle that doesn't move (speed 0) first, then the rest, biggest first
+  allCircles.sort((a, b) => {
+    if (a.speed === 0) return -1;
+    if (b.speed === 0) return 1;
+    return b.radius - a.radius;
+  });
+  lap = 0;
+  useCircles();
+}
+
+// ---------- use only the biggest few circles, as chosen on the slider ----------
+function useCircles() {
+  const count = Number(countSlider.value);
+  circles = allCircles.slice(0, count + 1);          // +1 for the circle that doesn't move
 
   // work out the circles' whole drawing for one lap
   path = [];
@@ -38,8 +55,8 @@ function findCircles() {
     const chain = chainAt(circles, i / 720);
     path.push(chain[chain.length - 1]);
   }
-  lap = 0;
-  info.textContent = points.length + " points drawn → " + circles.length + " circles";
+  countOut.textContent = count;
+  info.textContent = "Using the " + count + " biggest of " + (allCircles.length - 1) + " circles";
 }
 
 // ---------- drawing a frame ----------
@@ -106,6 +123,7 @@ function tick(timeMs) {
 pad.addEventListener("pointerdown", event => {
   drawing = true;
   circles = null;                               // drawing again: the old circles go away
+  allCircles = [];
   points = [];
   pad.setPointerCapture(event.pointerId);
   points.push(toCanvas(event));
@@ -129,7 +147,13 @@ pad.addEventListener("pointercancel", penUp);
 document.getElementById("clear").addEventListener("click", () => {
   points = [];
   circles = null;
+  allCircles = [];
   info.textContent = "Draw a line";
+});
+
+countSlider.addEventListener("input", () => {
+  countOut.textContent = countSlider.value;
+  if (allCircles.length > 0 && !drawing) useCircles();
 });
 
 requestAnimationFrame(tick);
