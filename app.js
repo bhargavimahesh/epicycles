@@ -1,18 +1,24 @@
-// ================= app.js: the two modes of index.html and switching between them =================
-// ---------- the two modes and switching between them ----------
-const modes = {};          // build.js and encode.js add themselves here
+// ================= app.js: the three modes of index.html and switching between them =================
+
+// Each mode: its tab button, its section, and the address ending that opens it directly.
+// The address endings differ from the section ids on purpose: a matching id would make the page jump.
+const MODES = [
+  { name: "build",  tab: "tabBuild",  section: "build",     hash: "#circles" },
+  { name: "encode", tab: "tabEncode", section: "encode",    hash: "#draw" },
+  { name: "kolam",  tab: "tabKolam",  section: "kolamMode", hash: "#kolam" },
+];
+const modes = {};          // build.js, encode.js and kolam.js add themselves here
 let activeMode = "build";
 
 function showMode(name) {
   if (modes[activeMode] && modes[activeMode].busy()) return;   // don't switch while recording
   activeMode = name;
-  $("tabBuild").setAttribute("aria-selected", name === "build");
-  $("tabEncode").setAttribute("aria-selected", name === "encode");
-  $("build").hidden = name !== "build";
-  $("encode").hidden = name !== "encode";
-  // remember the mode in the address (#circles or #draw), so a link can open either mode.
-  // These names differ from the section ids on purpose: a matching id would make the page jump.
-  history.replaceState(null, "", name === "build" ? "#circles" : "#draw");
+  for (const m of MODES) {
+    $(m.tab).setAttribute("aria-selected", m.name === name);
+    $(m.section).hidden = m.name !== name;
+  }
+  const hash = MODES.find(m => m.name === name).hash;
+  if (location.hash !== hash) history.replaceState(null, "", hash);   // so the address can be shared
   if (modes[name].shown) modes[name].shown();
 }
 
@@ -26,9 +32,15 @@ function tick(timeMs) {
   requestAnimationFrame(tick);
 }
 
+// Which mode does the address ask for? (#circles, #draw or #kolam; mode 1 if none)
+function modeFromAddress() {
+  const m = MODES.find(m => m.hash === location.hash);
+  return m ? m.name : "build";
+}
+
 function start() {
-  $("tabBuild").addEventListener("click", () => showMode("build"));
-  $("tabEncode").addEventListener("click", () => showMode("encode"));
-  showMode(location.hash === "#draw" ? "encode" : "build");
+  for (const m of MODES) $(m.tab).addEventListener("click", () => showMode(m.name));
+  window.addEventListener("hashchange", () => showMode(modeFromAddress()));   // a link like #kolam was followed
+  showMode(modeFromAddress());
   requestAnimationFrame(tick);
 }

@@ -302,23 +302,20 @@ $("kRecord").addEventListener("click", () => {
   });
 });
 
-// ---------- animation loop ----------
-let kLastTime = null;
-function kTick(timeMs) {
-  if (kLastTime === null) kLastTime = timeMs;
-  const dt = Math.min((timeMs - kLastTime) / 1000, 0.1);
-  kLastTime = timeMs;
-  if (kReel.isRecording()) {
-    kReel.step(timeMs, lapPos => { kTransport.lap = lapPos; renderKolam(lapPos); });
-  } else {
-    // in pen mode, hold the finished kolam for a moment before starting again
-    if (kTransport.playing) kTransport.lap = Math.min(kTransport.lap + dt / kTransport.seconds(), 1.15);
-    if (kTransport.lap >= 1.15) kTransport.lap = 0;
-    renderKolam(Math.min(kTransport.lap, 1));
-  }
-  kTransport.sync();
-  requestAnimationFrame(kTick);
-}
+// ---------- hooks for app.js ----------
+modes.kolam = {
+  frame(dt, timeMs) {
+    if (kReel.isRecording()) {
+      kReel.step(timeMs, lapPos => { kTransport.lap = lapPos; renderKolam(lapPos); });
+    } else {
+      // hold the finished kolam for a moment before starting again
+      if (kTransport.playing) kTransport.lap = Math.min(kTransport.lap + dt / kTransport.seconds(), 1.15);
+      if (kTransport.lap >= 1.15) kTransport.lap = 0;
+      renderKolam(Math.min(kTransport.lap, 1));
+    }
+    kTransport.sync();
+  },
+  busy: () => kReel.isRecording(),
+};
 
 newKolam();
-requestAnimationFrame(kTick);
