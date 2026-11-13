@@ -1,22 +1,23 @@
-// ================= reel.js: record a 9:16 video of a square canvas =================
-// One lap, plus one second to admire the result. Used by both modes.
+// ================= reel.js: make a 9:16 video (1080 x 1920) of a square canvas =================
+// One lap, plus one second to admire the result. Used by every mode.
+//
+// Two ways to make the video:
+// 1. Frame by frame (preferred): we draw each frame ourselves and hand it to the browser's
+//    video encoder (WebCodecs) with an exact time stamp. Every frame is perfect, however slow
+//    or fast the device is, and the result is always an MP4 with H.264 video (what Instagram wants).
+//    lib/mp4-muxer.js packs the encoded frames into an .mp4 file.
+// 2. Live recording (fallback for browsers without WebCodecs): we film the canvas while it plays.
+
 function makeReel(source) {
-  const FPS = 30;                                  // video frames per second
-  const reel = document.createElement("canvas");   // the 9:16 canvas only the recorder sees
+  const FPS = 30;
+  const reel = document.createElement("canvas");   // the 9:16 canvas only the video sees
   reel.width = 1080;
   reel.height = 1920;
   const reelCtx = reel.getContext("2d");
-
-  let recorder = null;      // null means "not recording"
-  let track = null;         // the video track we feed frames into
-  let frame = 0;            // how many frames recorded so far
-  let lastTime = 0;         // when the last frame was taken
-  let lapSeconds = 8;
-  let title = "";
-  let onDone = null;
+  let busy = false;
 
   // Copy the square picture into the middle of the 9:16 frame and add the title
-  function drawReelFrame() {
+  function drawReelFrame(title) {
     reelCtx.fillStyle = "#000";
     reelCtx.fillRect(0, 0, 1080, 1920);
     reelCtx.drawImage(source, 0, 420, 1080, 1080);
@@ -26,50 +27,118 @@ function makeReel(source) {
     reelCtx.fillText(title, 540, 340);
   }
 
-  // Start recording. When done, the video is offered as filename.mp4 and done() is called.
-  function start(seconds, filename, reelTitle, done) {
-    if (recorder) return;
-    lapSeconds = seconds;
-    title = reelTitle;
-    onDone = done;
-
-    // Prefer MP4 with H.264 video (what Instagram wants), then any MP4, then WebM
-    const type = ["video/mp4;codecs=avc1", "video/mp4", "video/webm"]
-      .find(t => MediaRecorder.isTypeSupported(t));
-    const stream = reel.captureStream(0);          // 0 = only take a picture when we ask
-    track = stream.getVideoTracks()[0];
-    const chunks = [];
-
-    recorder = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 8000000 });
-    recorder.ondataavailable = e => chunks.push(e.data);
-    recorder.onstop = () => {
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(new Blob(chunks, { type: type }));
-      link.download = filename + (type.startsWith("video/mp4") ? ".mp4" : ".webm");
-      link.click();
-      recorder = null;
-      if (onDone) onDone();
-    };
-    frame = 0;
-    lastTime = 0;
-    recorder.start();
+  function saveFile(blob, name) {
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = name;
+    link.click();
   }
 
-  // Call from the animation loop while recording.
-  // drawAt(lapPos) must draw the source canvas at that moment of the lap (0 to 1).
-  function step(timeMs, drawAt) {
-    if (!recorder || recorder.state !== "recording") return;
-    if (timeMs - lastTime < 1000 / FPS - 2) return;     // not time for the next frame yet
-    lastTime = timeMs;
+  const pause = () => new Promise(resolve => setTimeout(resolve, 0));   // let the page breathe
 
-    const lapFrames = lapSeconds * FPS;
-    drawAt(Math.min(frame / lapFrames, 1));             // same step every frame; hold at the end
-    drawReelFrame();
-    track.requestFrame();                               // put exactly this picture in the video
-    frame++;
-
-    if (frame > lapFrames + FPS) recorder.stop();       // one lap plus one second, then stop
+  // ---------- way 1: frame by frame ----------
+  async function pickH264() {
+    if (!window.VideoEncoder || !window.VideoFrame || !window.Mp4Muxer) return null;
+    // High, Main, then Baseline profile; all at level 4.0, enough for 1080 x 1920
+    for (const codec of ["avc1.640028", "avc1.4d0028", "avc1.420028"]) {
+      const config = { codec: codec, width: 1080, height: 1920, bitrate: 8000000, framerate: FPS };
+      try {
+        const answer = await VideoEncoder.isConfigSupported(config);
+        if (answer.supported) return config;
+      } catch (e) { /* try the next one */ }
+    }
+    return null;
   }
 
-  return { start: start, step: step, isRecording: () => recorder !== null };
+  async function frameByFrame(config, job) {
+    const muxer = new Mp4Muxer.Muxer({
+      target: new Mp4Muxer.ArrayBufferTarget(),
+      video: { codec: "avc", width: 1080, height: 1920 },
+      fastStart: "in-memory",
+    });
+    let failure = null;
+    const encoder = new VideoEncoder({
+      output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+      error: e => { failure = e; },
+    });
+    encoder.configure(config);
+
+    const lapFrames = Math.round(job.seconds * FPS);
+    const total = lapFrames + FPS;                       // one lap, then hold for one second
+    for (let i = 0; i < total; i++) {
+      job.drawAt(Math.min(i / lapFrames, 1));
+      drawReelFrame(job.title);
+      const frame = new VideoFrame(reel, { timestamp: Math.round(i * 1e6 / FPS), duration: Math.round(1e6 / FPS) });
+      encoder.encode(frame, { keyFrame: i % (2 * FPS) === 0 });
+      frame.close();
+      if (failure) throw failure;
+      while (encoder.encodeQueueSize > 6) await pause();   // don't run ahead of the encoder
+      if (i % 5 === 0) {
+        job.progress(i / total);
+        await pause();
+      }
+    }
+    await encoder.flush();
+    if (failure) throw failure;
+    muxer.finalize();
+    saveFile(new Blob([muxer.target.buffer], { type: "video/mp4" }), job.filename + ".mp4");
+  }
+
+  // ---------- way 2: live recording ----------
+  function liveRecording(job) {
+    return new Promise((resolve, reject) => {
+      const type = ["video/mp4;codecs=avc1", "video/mp4", "video/webm"].find(t => MediaRecorder.isTypeSupported(t));
+      const manual = "CanvasCaptureMediaStreamTrack" in window &&
+                     "requestFrame" in CanvasCaptureMediaStreamTrack.prototype;
+      const stream = reel.captureStream(manual ? 0 : FPS);
+      const track = stream.getVideoTracks()[0];
+      const chunks = [];
+      const recorder = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 8000000 });
+      recorder.ondataavailable = e => chunks.push(e.data);
+      recorder.onerror = e => reject(e.error || new Error("recording failed"));
+      recorder.onstop = () => {
+        saveFile(new Blob(chunks, { type: type }),
+                 job.filename + (type.startsWith("video/mp4") ? ".mp4" : ".webm"));
+        resolve();
+      };
+
+      const lapFrames = Math.round(job.seconds * FPS);
+      const total = lapFrames + FPS;
+      let frame = 0, lastTime = 0;
+      function loop(timeMs) {
+        if (timeMs - lastTime >= 1000 / FPS - 2) {        // time for the next frame
+          lastTime = timeMs;
+          job.drawAt(Math.min(frame / lapFrames, 1));
+          drawReelFrame(job.title);
+          if (manual) track.requestFrame();
+          frame++;
+          job.progress(frame / total);
+          if (frame >= total) { recorder.stop(); return; }
+        }
+        requestAnimationFrame(loop);
+      }
+      recorder.start();
+      requestAnimationFrame(loop);
+    });
+  }
+
+  // ---------- start ----------
+  // job: { seconds, filename, title, drawAt(lapPos), progress(fraction), done(error or null) }
+  async function start(job) {
+    if (busy) return;
+    busy = true;
+    let error = null;
+    try {
+      const config = await pickH264();
+      if (config) await frameByFrame(config, job);
+      else await liveRecording(job);
+    } catch (e) {
+      console.error(e);
+      error = e;
+    }
+    busy = false;
+    job.done(error);
+  }
+
+  return { start: start, isRecording: () => busy };
 }

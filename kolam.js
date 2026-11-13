@@ -19,7 +19,8 @@ const K_CENTRE = K_SIZE / 2;
 const kTransport = makeTransport("k");
 const kReel = makeReel(kCanvas);
 
-let symmetry = "rotate";
+let wantedSymmetry = "rotate";   // what the person picked
+let symmetry = "rotate";         // what we can actually use for this grid size
 let shape = "diamond";
 let view = "line";
 let lineColour = "#ffffff";
@@ -185,8 +186,22 @@ function buildKolam() {
   if (view === "circles") prepareCircles();
 }
 
+// With an even number of dots per side, a one-line kolam can only be mirrored once
+// (turning 4 ways or mirroring both ways always splits it into several lines).
+function updateSymmetryButtons(m) {
+  const even = m % 2 === 0;
+  symmetry = even && (wantedSymmetry === "rotate" || wantedSymmetry === "mirror2") ? "mirror" : wantedSymmetry;
+  document.querySelectorAll("#kSym button").forEach(b => {
+    const sym = b.getAttribute("data-sym");
+    b.disabled = even && (sym === "rotate" || sym === "mirror2");
+    b.setAttribute("aria-pressed", sym === symmetry);
+  });
+  $("kEvenNote").hidden = !even;
+}
+
 function newKolam() {
   const m = Number($("kDots").value);
+  updateSymmetryButtons(m);
   grid = makeGrid(m);
   if (!grid) {
     $("kStatus").textContent = "Couldn't find a one-line kolam with this symmetry. Try again or pick another.";
@@ -270,7 +285,7 @@ function choice(rowId, attribute, onPick) {
   }));
 }
 
-choice("kSym", "data-sym", value => { symmetry = value; newKolam(); });
+choice("kSym", "data-sym", value => { wantedSymmetry = value; newKolam(); });
 choice("kShape", "data-shape", value => { shape = value; buildKolam(); });
 choice("kColours", "data-colour", value => { lineColour = value; });
 choice("kView", "data-view", value => {
@@ -293,26 +308,31 @@ $("kSave").addEventListener("click", () => {
 });
 
 $("kRecord").addEventListener("click", () => {
-  $("kStatus").textContent = "Recording…";
+  if (!kolam) return;
   $("kRecord").disabled = true;
-  const title = view === "circles" ? "A kolam drawn by circles" : "Drawing a kolam";
-  kReel.start(kTransport.seconds(), "kolam", title, () => {
-    $("kStatus").textContent = "Video saved to your downloads.";
-    $("kRecord").disabled = false;
+  kReel.start({
+    seconds: kTransport.seconds(),
+    filename: "kolam",
+    title: view === "circles" ? "A kolam drawn by circles" : "Drawing a kolam",
+    drawAt: lapPos => { kTransport.lap = lapPos; renderKolam(lapPos); },
+    progress: f => { $("kStatus").textContent = `Making the video… ${Math.round(f * 100)}%`; },
+    done: error => {
+      $("kStatus").textContent = error ? "The video could not be made: " + error.message
+                                       : "Video saved to your downloads.";
+      $("kRecord").disabled = false;
+      kTransport.lap = 0;
+    },
   });
 });
 
 // ---------- hooks for app.js ----------
 modes.kolam = {
-  frame(dt, timeMs) {
-    if (kReel.isRecording()) {
-      kReel.step(timeMs, lapPos => { kTransport.lap = lapPos; renderKolam(lapPos); });
-    } else {
-      // hold the finished kolam for a moment before starting again
-      if (kTransport.playing) kTransport.lap = Math.min(kTransport.lap + dt / kTransport.seconds(), 1.15);
-      if (kTransport.lap >= 1.15) kTransport.lap = 0;
-      renderKolam(Math.min(kTransport.lap, 1));
-    }
+  frame(dt) {
+    if (kReel.isRecording()) return;          // the video maker is drawing the frames itself
+    // hold the finished kolam for a moment before starting again
+    if (kTransport.playing) kTransport.lap = Math.min(kTransport.lap + dt / kTransport.seconds(), 1.15);
+    if (kTransport.lap >= 1.15) kTransport.lap = 0;
+    renderKolam(Math.min(kTransport.lap, 1));
     kTransport.sync();
   },
   busy: () => kReel.isRecording(),

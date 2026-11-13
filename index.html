@@ -161,7 +161,7 @@
       </div>
 
       <label class="slider"><span>Dots per side</span>
-        <input type="range" id="kDots" min="3" max="9" step="2" value="5"><output id="kDotsOut">5</output></label>
+        <input type="range" id="kDots" min="3" max="9" step="1" value="5"><output id="kDotsOut">5</output></label>
 
       <div class="field">
         <span class="label">Symmetry</span>
@@ -173,6 +173,8 @@
         </div>
         <p class="hint small">Mirrors run along the rows of dots, so in a diamond they look tilted.
           Choose Square to see them straight.</p>
+        <p class="hint small" id="kEvenNote" hidden>With an even number of dots, one line can only be
+          mirrored once, so the other two choices are switched off.</p>
       </div>
 
       <div class="field">
@@ -240,6 +242,7 @@
   </footer>
 
   <script src="fourier.js"></script>
+  <script src="lib/mp4-muxer.js"></script>
   <script src="reel.js"></script>
   <script src="shared.js"></script>
   <script src="app.js"></script>

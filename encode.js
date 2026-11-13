@@ -299,11 +299,19 @@ $("eSave").addEventListener("click", () => {
 $("eRecord").addEventListener("click", () => {
   if (encCircles.length === 0) { $("eStatus").textContent = "Draw something first."; return; }
   const count = encCircles.length - 1;
-  $("eStatus").textContent = "Recording one lap…";
   $("eRecord").disabled = true;
-  encodeReel.start(encodeTransport.seconds(), "drawn-by-circles", `Drawn by ${count} circles`, () => {
-    $("eStatus").textContent = "Video saved to your downloads.";
-    $("eRecord").disabled = false;
+  encodeReel.start({
+    seconds: encodeTransport.seconds(),
+    filename: "drawn-by-circles",
+    title: `Drawn by ${count} circles`,
+    drawAt: lapPos => { encodeTransport.lap = lapPos; renderRepro(); },
+    progress: f => { $("eStatus").textContent = `Making the video… ${Math.round(f * 100)}%`; },
+    done: error => {
+      $("eStatus").textContent = error ? "The video could not be made: " + error.message
+                                       : "Video saved to your downloads.";
+      $("eRecord").disabled = false;
+      encodeTransport.lap = 0;
+    },
   });
 });
 
@@ -318,13 +326,10 @@ function renderRepro() {
 }
 
 modes.encode = {
-  frame(dt, timeMs) {
-    if (encodeReel.isRecording()) {
-      encodeReel.step(timeMs, lapPos => { encodeTransport.lap = lapPos; renderRepro(); });
-    } else {
-      encodeTransport.advance(dt);
-      renderRepro();
-    }
+  frame(dt) {
+    if (encodeReel.isRecording()) return;     // the video maker is drawing the frames itself
+    encodeTransport.advance(dt);
+    renderRepro();
     encodeTransport.sync();
   },
   busy: () => encodeReel.isRecording(),

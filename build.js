@@ -146,23 +146,28 @@ $("bSave").addEventListener("click", () => {
 });
 
 $("bRecord").addEventListener("click", () => {
-  $("bStatus").textContent = "Recording one lap…";
   $("bRecord").disabled = true;
-  buildReel.start(buildTransport.seconds(), "spinning-circles", "Spinning circles", () => {
-    $("bStatus").textContent = "Video saved to your downloads.";
-    $("bRecord").disabled = false;
+  buildReel.start({
+    seconds: buildTransport.seconds(),
+    filename: "spinning-circles",
+    title: "Spinning circles",
+    drawAt: lapPos => { buildTransport.lap = lapPos; renderBuild(); },
+    progress: f => { $("bStatus").textContent = `Making the video… ${Math.round(f * 100)}%`; },
+    done: error => {
+      $("bStatus").textContent = error ? "The video could not be made: " + error.message
+                                       : "Video saved to your downloads.";
+      $("bRecord").disabled = false;
+      buildTransport.lap = 0;
+    },
   });
 });
 
 // ---------- hooks for app.js ----------
 modes.build = {
-  frame(dt, timeMs) {
-    if (buildReel.isRecording()) {
-      buildReel.step(timeMs, lapPos => { buildTransport.lap = lapPos; renderBuild(); });
-    } else {
-      buildTransport.advance(dt);
-      renderBuild();
-    }
+  frame(dt) {
+    if (buildReel.isRecording()) return;      // the video maker is drawing the frames itself
+    buildTransport.advance(dt);
+    renderBuild();
     buildTransport.sync();
   },
   busy: () => buildReel.isRecording(),
