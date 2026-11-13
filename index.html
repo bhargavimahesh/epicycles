@@ -215,6 +215,20 @@
       </div>
 
       <div class="block">
+        <span class="label">The recipe: circle size for every speed</span>
+        <div class="chart-wrap">
+          <canvas id="kSpectrum" class="recipe-chart"
+                  aria-label="Bar chart of circle sizes for speeds minus 40 to plus 40, coloured by speed group"></canvas>
+          <div id="kTip" class="tip" hidden></div>
+        </div>
+        <div class="legend" id="kLegend"></div>
+        <p class="note" id="kSymmetryNote"></p>
+        <p class="hint small">Each bar is one circle. Colours group the speeds by their remainder
+          when divided by 4. Heights use a square-root scale, so small circles still show.
+          Hover or tap a bar for its numbers. Try switching between “Turn 4 ways” and “Free”.</p>
+      </div>
+
+      <div class="block">
         <span class="label">How to draw a kolam by hand</span>
         <ol class="steps">
           <li>Put down the dots in a square grid. Here the grid is turned on its corner, like a diamond.</li>

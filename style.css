@@ -203,7 +203,7 @@ figcaption { color: var(--muted); font-size: 0.9rem; }
 .stat strong { font-size: 1.05rem; font-variant-numeric: tabular-nums; }
 
 .chart-wrap { position: relative; }
-#spectrum { display: block; width: 100%; height: 140px; touch-action: manipulation; }
+#spectrum, .recipe-chart { display: block; width: 100%; height: 140px; touch-action: manipulation; }
 .tip {
   position: absolute;
   transform: translate(-50%, -115%);
@@ -247,3 +247,8 @@ footer { max-width: 1400px; margin: 0 auto; padding: 16px; color: var(--muted); 
 
 .field { display: flex; flex-direction: column; gap: 6px; }
 .panel .slider { flex: none; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.85rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend strong { color: var(--text); font-variant-numeric: tabular-nums; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--c); }

@@ -182,8 +182,10 @@ function buildKolam() {
 
   kolam = { path: resample(line, 2400), dots: dots, walls: walls, dotRadius: Math.max(5, s * 0.14) };
   kolam.path.push(kolam.path[0]);                           // close the loop for drawing
-  kAllCircles = [];                                          // circles are worked out when needed
-  if (view === "circles") prepareCircles();
+  // Fourier: the circles that draw this kolam (also used for the recipe chart)
+  kAllCircles = sortCircles(dft(resample(kolam.path.slice(0, -1), 1024), 300));
+  useKolamCircles();
+  drawKolamRecipe();
 }
 
 // With an even number of dots per side, a one-line kolam can only be mirrored once
@@ -216,11 +218,7 @@ function newKolam() {
 
 // ---------- spinning circles ----------
 function prepareCircles() {
-  if (kAllCircles.length === 0) {
-    const points = resample(kolam.path.slice(0, -1), 1024);
-    kAllCircles = sortCircles(dft(points, 300));
-  }
-  useKolamCircles();
+  if (kAllCircles.length > 0) useKolamCircles();
 }
 
 function useKolamCircles() {
@@ -229,6 +227,99 @@ function useKolamCircles() {
   kCircles = kAllCircles.slice(0, count + 1);
   kCirclePath = pathOf(kCircles, 2400);
 }
+
+// ---------- the recipe: which speeds does this kolam use? ----------
+// Speeds are grouped by their remainder when divided by 4.
+// A kolam that looks the same after a quarter turn uses only ONE group (1, 5, 9, −3, …),
+// one that looks the same after a half turn uses only the odd groups.
+const GROUP_COLOURS = ["#4cc9f0", "#ffd23f", "#ff4d6d", "#3ddc97"];
+const GROUP_NAMES = ["0, 4, 8, −4 …", "1, 5, 9, −3 …", "2, 6, 10, −2 …", "3, 7, 11, −1 …"];
+const groupOf = speed => ((speed % 4) + 4) % 4;
+const RECIPE_SPEED = 40;                   // the chart shows speeds −40 … +40
+
+// How much of the drawing each group makes (radius squared, so big circles count more)
+function groupShares() {
+  const share = [0, 0, 0, 0];
+  let total = 0;
+  for (const c of kAllCircles) {
+    if (c.speed === 0) continue;           // the still circle only places the drawing
+    share[groupOf(c.speed)] += c.radius * c.radius;
+    total += c.radius * c.radius;
+  }
+  return share.map(s => s / total);
+}
+
+function drawKolamRecipe() {
+  const canvas = $("kSpectrum");
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (!w || kAllCircles.length === 0) return;          // hidden: drawn again when shown
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  const g = canvas.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, w, h);
+
+  const shown = kAllCircles.filter(c => c.speed !== 0 && Math.abs(c.speed) <= RECIPE_SPEED);
+  const biggest = Math.max(...shown.map(c => c.radius));
+  const base = h - 22, top = 8, slot = w / (2 * RECIPE_SPEED + 1);
+  for (const c of shown) {
+    const barH = (base - top) * Math.sqrt(c.radius / biggest);
+    if (barH < 0.5) continue;                          // too small to see
+    g.fillStyle = GROUP_COLOURS[groupOf(c.speed)];
+    g.fillRect((c.speed + RECIPE_SPEED) * slot + slot * 0.15, base - barH, Math.max(1, slot * 0.7), barH);
+  }
+  g.fillStyle = "#3a3f47";
+  g.fillRect(0, base, w, 1);                           // baseline
+  g.fillStyle = "#9aa1ad";
+  g.font = "12px system-ui, sans-serif";
+  g.textAlign = "left";   g.fillText("speed −" + RECIPE_SPEED, 0, h - 5);
+  g.textAlign = "center"; g.fillText("0", w / 2, h - 5);
+  g.textAlign = "right";  g.fillText("+" + RECIPE_SPEED, w, h - 5);
+
+  // legend with each group's share
+  const shares = groupShares();
+  $("kLegend").innerHTML = GROUP_NAMES.map((name, i) =>
+    `<span><i style="--c:${GROUP_COLOURS[i]}"></i>${name} <strong>${(100 * shares[i]).toFixed(0)}%</strong></span>`
+  ).join("");
+
+  // what the recipe says about symmetry
+  const used = [0, 1, 2, 3].filter(i => shares[i] > 0.005);
+  let note;
+  if (used.length === 1) {
+    note = `Only speeds ${GROUP_NAMES[used[0]]} are used. That is the rule for 4-way turning symmetry: ` +
+           "the kolam looks the same after every quarter turn.";
+  } else if (used.every(i => i % 2 === 1)) {
+    note = "Only odd speeds are used, so the kolam looks the same after a half turn (upside down).";
+  } else {
+    note = "Every kind of speed is used, so the kolam does not look the same when you turn it.";
+    if (symmetry === "mirror") {
+      note += " It is still a mirror image of itself: mirroring doesn't remove any speeds, " +
+              "it pairs up the circles' start angles instead.";
+    }
+  }
+  $("kSymmetryNote").textContent = note;
+}
+
+// Hover or tap a bar to read its numbers
+function showKolamTip(event) {
+  if (kAllCircles.length === 0) return;
+  const canvas = $("kSpectrum");
+  const box = canvas.getBoundingClientRect();
+  const x = event.clientX - box.left;
+  const speed = Math.floor(x / (box.width / (2 * RECIPE_SPEED + 1))) - RECIPE_SPEED;
+  const c = kAllCircles.find(q => q.speed === speed);
+  const tip = $("kTip");
+  if (!c || speed === 0) { tip.hidden = true; return; }
+  tip.textContent = `speed ${speed > 0 ? "+" : ""}${speed}: radius ${c.radius.toFixed(1)} px`;
+  tip.style.left = Math.min(Math.max(x, 80), box.width - 80) + "px";
+  tip.style.top = (event.clientY - box.top) + "px";
+  tip.hidden = false;
+}
+$("kSpectrum").addEventListener("pointermove", showKolamTip);
+$("kSpectrum").addEventListener("pointerdown", showKolamTip);
+$("kSpectrum").addEventListener("pointerleave", () => { $("kTip").hidden = true; });
+window.addEventListener("resize", drawKolamRecipe);
 
 // ---------- drawing ----------
 function renderKolam(lap) {
@@ -336,6 +427,7 @@ modes.kolam = {
     kTransport.sync();
   },
   busy: () => kReel.isRecording(),
+  shown: drawKolamRecipe,
 };
 
 newKolam();
