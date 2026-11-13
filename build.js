@@ -153,9 +153,8 @@ $("bRecord").addEventListener("click", () => {
     title: "Spinning circles",
     drawAt: lapPos => { buildTransport.lap = lapPos; renderBuild(); },
     progress: f => { $("bStatus").textContent = `Making the video… ${Math.round(f * 100)}%`; },
-    done: error => {
-      $("bStatus").textContent = error ? "The video could not be made: " + error.message
-                                       : "Video saved to your downloads.";
+    done: (error, note) => {
+      $("bStatus").textContent = error ? "The video could not be made: " + error.message : note;
       $("bRecord").disabled = false;
       buildTransport.lap = 0;
     },

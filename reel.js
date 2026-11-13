@@ -41,7 +41,9 @@ function makeReel(source) {
     if (!window.VideoEncoder || !window.VideoFrame || !window.Mp4Muxer) return null;
     // High, Main, then Baseline profile; all at level 4.0, enough for 1080 x 1920
     for (const codec of ["avc1.640028", "avc1.4d0028", "avc1.420028"]) {
-      const config = { codec: codec, width: 1080, height: 1920, bitrate: 8000000, framerate: FPS };
+      // format "avc" asks the encoder to also describe its settings, which the .mp4 file needs
+      const config = { codec: codec, width: 1080, height: 1920, bitrate: 8000000, framerate: FPS,
+                       avc: { format: "avc" } };
       try {
         const answer = await VideoEncoder.isConfigSupported(config);
         if (answer.supported) return config;
@@ -57,8 +59,20 @@ function makeReel(source) {
       fastStart: "in-memory",
     });
     let failure = null;
+    let described = false;
     const encoder = new VideoEncoder({
-      output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+      output: (chunk, meta) => {
+        // The first piece of video must come with a description of the settings.
+        // Some browsers (e.g. Firefox) leave it out; then we can't build an .mp4 this way.
+        if (!described) {
+          if (!meta || !meta.decoderConfig) {
+            failure = failure || new Error("this browser's video encoder gave no settings description");
+            return;
+          }
+          described = true;
+        }
+        muxer.addVideoChunk(chunk, meta);
+      },
       error: e => { failure = e; },
     });
     encoder.configure(config);
@@ -71,7 +85,7 @@ function makeReel(source) {
       const frame = new VideoFrame(reel, { timestamp: Math.round(i * 1e6 / FPS), duration: Math.round(1e6 / FPS) });
       encoder.encode(frame, { keyFrame: i % (2 * FPS) === 0 });
       frame.close();
-      if (failure) throw failure;
+      if (failure) { try { encoder.close(); } catch (e) {} throw failure; }
       while (encoder.encodeQueueSize > 6) await pause();   // don't run ahead of the encoder
       if (i % 5 === 0) {
         job.progress(i / total);
@@ -99,7 +113,7 @@ function makeReel(source) {
       recorder.onstop = () => {
         saveFile(new Blob(chunks, { type: type }),
                  job.filename + (type.startsWith("video/mp4") ? ".mp4" : ".webm"));
-        resolve();
+        resolve(type);
       };
 
       const lapFrames = Math.round(job.seconds * FPS);
@@ -123,21 +137,36 @@ function makeReel(source) {
   }
 
   // ---------- start ----------
-  // job: { seconds, filename, title, drawAt(lapPos), progress(fraction), done(error or null) }
+  // job: { seconds, filename, title, drawAt(lapPos), progress(fraction), done(error, note) }
   async function start(job) {
     if (busy) return;
     busy = true;
     let error = null;
+    let note = "Video saved to your downloads.";
     try {
       const config = await pickH264();
-      if (config) await frameByFrame(config, job);
-      else await liveRecording(job);
+      let made = false;
+      if (config) {
+        try {
+          await frameByFrame(config, job);
+          made = true;
+        } catch (e) {
+          console.warn("Frame-by-frame video failed, recording live instead:", e);
+        }
+      }
+      if (!made) {
+        const type = await liveRecording(job);
+        if (!type.startsWith("video/mp4")) {
+          note = "Saved as a .webm video: this browser can't make MP4. For Instagram, " +
+                 "record in Chrome or Safari, or convert the file to MP4.";
+        }
+      }
     } catch (e) {
       console.error(e);
       error = e;
     }
     busy = false;
-    job.done(error);
+    job.done(error, note);
   }
 
   return { start: start, isRecording: () => busy };

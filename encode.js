@@ -306,9 +306,8 @@ $("eRecord").addEventListener("click", () => {
     title: `Drawn by ${count} circles`,
     drawAt: lapPos => { encodeTransport.lap = lapPos; renderRepro(); },
     progress: f => { $("eStatus").textContent = `Making the video… ${Math.round(f * 100)}%`; },
-    done: error => {
-      $("eStatus").textContent = error ? "The video could not be made: " + error.message
-                                       : "Video saved to your downloads.";
+    done: (error, note) => {
+      $("eStatus").textContent = error ? "The video could not be made: " + error.message : note;
       $("eRecord").disabled = false;
       encodeTransport.lap = 0;
     },

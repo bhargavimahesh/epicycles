@@ -407,9 +407,8 @@ $("kRecord").addEventListener("click", () => {
     title: view === "circles" ? "A kolam drawn by circles" : "Drawing a kolam",
     drawAt: lapPos => { kTransport.lap = lapPos; renderKolam(lapPos); },
     progress: f => { $("kStatus").textContent = `Making the video… ${Math.round(f * 100)}%`; },
-    done: error => {
-      $("kStatus").textContent = error ? "The video could not be made: " + error.message
-                                       : "Video saved to your downloads.";
+    done: (error, note) => {
+      $("kStatus").textContent = error ? "The video could not be made: " + error.message : note;
       $("kRecord").disabled = false;
       kTransport.lap = 0;
     },
