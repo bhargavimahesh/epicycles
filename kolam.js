@@ -113,7 +113,9 @@ function makeGrid(m) {
   for (let attempt = 0; attempt < 12; attempt++) {
     const g = newGrid(m);
     const done = new Uint8Array(g.L * g.L);
-    const busyness = 0.2 + Math.random() * 0.35;      // how many turning points to start with
+    // how many turning points to start with: more crossings means fewer turning points
+    const weave = Number($("kWeave").value) / 100;
+    const busyness = 0.6 - 0.5 * weave + 0.1 * (Math.random() - 0.5);
     for (const [x, y] of halfway) {
       if (done[x * g.L + y]) continue;
       const wall = Math.random() < busyness ? 1 + Math.floor(Math.random() * 2) : 0;
@@ -182,6 +184,7 @@ function buildKolam() {
 
   kolam = { path: resample(line, 2400), dots: dots, walls: walls, dotRadius: Math.max(5, s * 0.14) };
   kolam.path.push(kolam.path[0]);                           // close the loop for drawing
+  findCrossings(s, toMaths);
   // Fourier: the circles that draw this kolam (also used for the recipe chart)
   kAllCircles = sortCircles(dft(resample(kolam.path.slice(0, -1), 1024), 300));
   useKolamCircles();
@@ -210,10 +213,48 @@ function newKolam() {
     return;
   }
   $("kStatus").textContent = "";
-  $("kInfo").textContent = `${m} × ${m} = ${m * m} dots, one line`;
   kTransport.lap = 0;
   kTransport.setPlaying(true);
   buildKolam();
+  $("kInfo").textContent = `${m} × ${m} = ${m * m} dots, one line, ${kolam.crossings} crossings`;
+}
+
+// ---------- crossings: over and under ----------
+// Every halfway point without a turning point is a crossing: the line passes it twice.
+// Walking along the line, we go over, under, over, under … at the crossings we meet.
+// (For any closed line drawn on paper this gives each crossing one "over" and one "under".)
+function findCrossings(s, toMaths) {
+  const m = grid.m;
+  const path = kolam.path;
+  const spacing = Math.hypot(path[1][0] - path[0][0], path[1][1] - path[0][1]);
+  const near = 0.35 * s;                                   // how close counts as "passing through"
+  const visits = [];                                       // { index along the line, crossing number }
+  let crossingCount = 0;
+  for (let x = 1; x < 2 * m; x++) {
+    for (let y = 1; y < 2 * m; y++) {
+      if ((x + y) % 2 === 0 || grid.walls[x * grid.L + y] !== 0) continue;
+      const [cx, cy] = toMaths([x, y]);
+      // find the stretches of the line that pass close to this crossing; keep the middle of each
+      let start = -1;
+      for (let i = 0; i < path.length; i++) {
+        const close = Math.hypot(path[i][0] - cx, path[i][1] - cy) < near;
+        if (close && start < 0) start = i;
+        if (!close && start >= 0) { visits.push({ index: Math.round((start + i - 1) / 2), crossing: crossingCount }); start = -1; }
+      }
+      crossingCount++;
+    }
+  }
+  visits.sort((a, b) => a.index - b.index);
+  // every other visit goes over; pair each crossing's "over" visit with its "under" visit
+  const pairs = [];
+  visits.forEach((v, k) => {
+    pairs[v.crossing] = pairs[v.crossing] || {};
+    if (k % 2 === 0) pairs[v.crossing].over = v.index; else pairs[v.crossing].under = v.index;
+  });
+  kolam.knots = pairs.filter(p => p.over !== undefined && p.under !== undefined);
+  kolam.gapHalf = Math.ceil(0.3 * s / spacing);            // half the length of the gap in the lower line
+  kolam.overHalf = Math.ceil(0.55 * s / spacing);          // half the length of the upper line we redraw
+  kolam.crossings = crossingCount;
 }
 
 // ---------- spinning circles ----------
@@ -358,6 +399,23 @@ function renderKolam(lap) {
   strokeLine(ctx, kolam.path, 0, upto, lineColour, 5);
   ctx.shadowBlur = 0;
 
+  // knot look: once both strands of a crossing are drawn, cut a small gap into the lower one
+  // and draw the upper one again across the gap
+  if ($("kKnot").checked) {
+    for (const { over, under } of kolam.knots) {
+      if (over > upto || under > upto) continue;
+      ctx.lineCap = "butt";
+      strokeLine(ctx, kolam.path, Math.max(0, under - kolam.gapHalf),
+                 Math.min(upto, under + kolam.gapHalf), "#000", 14);      // the gap
+      ctx.lineCap = "round";
+      ctx.shadowColor = lineColour;
+      ctx.shadowBlur = 12;
+      strokeLine(ctx, kolam.path, Math.max(0, over - kolam.overHalf),
+                 Math.min(upto, over + kolam.overHalf), lineColour, 5);   // the upper line
+      ctx.shadowBlur = 0;
+    }
+  }
+
   if (lap < 1) {                                           // the pen
     const [x, y] = kolam.path[upto];
     ctx.fillStyle = "#ffd23f";
@@ -387,6 +445,11 @@ choice("kView", "data-view", value => {
 });
 
 $("newKolam").addEventListener("click", newKolam);
+$("kWeave").addEventListener("input", () => {
+  const v = Number($("kWeave").value);
+  $("kWeaveOut").textContent = v < 25 ? "few" : v < 50 ? "some" : v < 75 ? "many" : "most";
+  newKolam();
+});
 $("kDots").addEventListener("input", () => {
   $("kDotsOut").textContent = $("kDots").value;
   newKolam();

@@ -161,7 +161,12 @@
       </div>
 
       <label class="slider"><span>Dots per side</span>
-        <input type="range" id="kDots" min="3" max="9" step="1" value="5"><output id="kDotsOut">5</output></label>
+        <input type="range" id="kDots" min="3" max="13" step="1" value="5"><output id="kDotsOut">5</output></label>
+
+      <label class="slider"><span>Crossings</span>
+        <input type="range" id="kWeave" min="0" max="100" value="55"><output id="kWeaveOut">many</output></label>
+      <p class="hint small">More crossings: the line weaves through the gaps more often.
+        Fewer: it curls around single dots more often.</p>
 
       <div class="field">
         <span class="label">Symmetry</span>
@@ -200,6 +205,7 @@
         <span class="label">Show</span>
         <label class="check"><input type="checkbox" id="kShowGuide" checked> The whole line, faintly</label>
         <label class="check"><input type="checkbox" id="kShowWalls"> Turning points (where the line turns back)</label>
+        <label class="check"><input type="checkbox" id="kKnot" checked> Over and under at crossings, like a knot</label>
       </div>
 
       <div class="field">
@@ -235,6 +241,7 @@
           <li>Start your line between two dots, never on one.</li>
           <li>Curve around a dot, then slip through the gap between two dots, always diagonally.</li>
           <li>When you reach the edge, or a turning point, swing back around the dot instead of going on.</li>
+          <li>Where the line crosses itself, go over and under in turn, like weaving a basket.</li>
           <li>Keep going without lifting your hand until you are back where you started.
             Every dot ends up inside its own little loop.</li>
         </ol>
