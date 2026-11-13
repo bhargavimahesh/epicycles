@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kolam · Epicycle Ink</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>Kolam</h1>
+      <p class="tagline">A kolam is a line rangoli from South India: one closed line that loops around
+        a grid of dots without ever touching them. Watch how each one is drawn, then let circles draw it.</p>
+    </div>
+    <nav class="tabs" aria-label="Pages">
+      <a class="tablink" href="index.html#circles">1 · Build with circles</a>
+      <a class="tablink" href="index.html#draw">2 · Draw and encode</a>
+      <a class="tablink" href="kolam.html" aria-current="page">3 · Kolam</a>
+    </nav>
+  </header>
+
+  <section id="kolam" class="mode split">
+    <div class="stage">
+      <canvas id="kolamCanvas" class="screen" width="1000" height="1000"
+              aria-label="A kolam being drawn around a grid of dots"></canvas>
+      <div class="transport">
+        <button id="kPlay">Pause</button>
+        <label class="slider no-out"><span>Moment</span>
+          <input type="range" id="kScrub" min="0" max="1000" value="0"></label>
+        <label class="slider"><span>Drawing time</span>
+          <input type="range" id="kLap" min="4" max="60" value="20"><output id="kLapOut">20 s</output></label>
+      </div>
+    </div>
+
+    <aside class="panel">
+      <div class="row">
+        <button id="newKolam" class="primary">New kolam</button>
+        <span class="muted" id="kInfo"></span>
+      </div>
+
+      <label class="slider"><span>Dots per side</span>
+        <input type="range" id="kDots" min="3" max="9" step="2" value="5"><output id="kDotsOut">5</output></label>
+
+      <div class="field">
+        <span class="label">Symmetry</span>
+        <div class="seg" id="kSym">
+          <button data-sym="rotate" aria-pressed="true">Turn 4 ways</button>
+          <button data-sym="mirror2" aria-pressed="false">Mirror both ways</button>
+          <button data-sym="mirror" aria-pressed="false">Mirror once</button>
+          <button data-sym="none" aria-pressed="false">Free</button>
+        </div>
+        <p class="hint small">Mirrors run along the rows of dots, so in a diamond they look tilted.
+          Choose Square to see them straight.</p>
+      </div>
+
+      <div class="field">
+        <span class="label">Grid</span>
+        <div class="seg" id="kShape">
+          <button data-shape="diamond" aria-pressed="true">Diamond</button>
+          <button data-shape="square" aria-pressed="false">Square</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="label">Line colour</span>
+        <div class="row" id="kColours">
+          <button class="swatch" style="--c:#ffffff" data-colour="#ffffff" aria-label="White" aria-pressed="true"></button>
+          <button class="swatch" style="--c:#ff8fb8" data-colour="#ff8fb8" aria-label="Pink" aria-pressed="false"></button>
+          <button class="swatch" style="--c:#ffe066" data-colour="#ffe066" aria-label="Yellow" aria-pressed="false"></button>
+          <button class="swatch" style="--c:#7ee8fa" data-colour="#7ee8fa" aria-label="Blue" aria-pressed="false"></button>
+          <button class="swatch" style="--c:#3ddc97" data-colour="#3ddc97" aria-label="Green" aria-pressed="false"></button>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="label">Show</span>
+        <label class="check"><input type="checkbox" id="kShowGuide" checked> The whole line, faintly</label>
+        <label class="check"><input type="checkbox" id="kShowWalls"> Turning points (where the line turns back)</label>
+      </div>
+
+      <div class="field">
+        <span class="label">Who draws it</span>
+        <div class="seg" id="kView">
+          <button data-view="line" aria-pressed="true">A pen</button>
+          <button data-view="circles" aria-pressed="false">Spinning circles</button>
+        </div>
+        <label class="slider" id="kCountRow" hidden><span>Circles</span>
+          <input type="range" id="kCount" min="5" max="600" value="250"><output id="kCountOut">250</output></label>
+        <p class="hint" id="kCircleHint" hidden>A kolam is one closed line, so circles can draw it too.
+          Slide down: with few circles the loops melt into soft waves.</p>
+      </div>
+
+      <div class="block">
+        <span class="label">How to draw a kolam by hand</span>
+        <ol class="steps">
+          <li>Put down the dots in a square grid. Here the grid is turned on its corner, like a diamond.</li>
+          <li>Start your line between two dots, never on one.</li>
+          <li>Curve around a dot, then slip through the gap between two dots, always diagonally.</li>
+          <li>When you reach the edge, or a turning point, swing back around the dot instead of going on.</li>
+          <li>Keep going without lifting your hand until you are back where you started.
+            Every dot ends up inside its own little loop.</li>
+        </ol>
+        <p class="hint small">Tip: turn on “Turning points” to see where the line has to turn back.
+          Slide “Moment” to go through the drawing slowly.</p>
+      </div>
+
+      <div class="row">
+        <button id="kSave">Save picture</button>
+        <button id="kRecord">Record reel</button>
+      </div>
+      <p class="status" id="kStatus" role="status"></p>
+    </aside>
+  </section>
+
+  <footer>
+    Made with spinning circles by Bhargavi ·
+    <a href="https://github.com/bhargavimahesh/epicycles">Source on GitHub</a>
+  </footer>
+
+  <script src="fourier.js"></script>
+  <script src="reel.js"></script>
+  <script src="shared.js"></script>
+  <script src="kolam.js"></script>
+</body>
+</html>

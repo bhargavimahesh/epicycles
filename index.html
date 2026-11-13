@@ -16,11 +16,12 @@
     <nav class="tabs" role="tablist" aria-label="Modes">
       <button role="tab" id="tabBuild" aria-controls="build" aria-selected="true">1 · Build with circles</button>
       <button role="tab" id="tabEncode" aria-controls="encode" aria-selected="false">2 · Draw and encode</button>
+      <a class="tablink" href="kolam.html">3 · Kolam</a>
     </nav>
   </header>
 
   <!-- ===================== MODE 1: build with circles ===================== -->
-  <section id="build" class="mode" role="tabpanel" aria-labelledby="tabBuild">
+  <section id="build" class="mode split" role="tabpanel" aria-labelledby="tabBuild">
     <div class="stage">
       <canvas id="buildCanvas" class="screen" width="1000" height="1000"
               aria-label="Spinning circles drawing a shape"></canvas>
@@ -144,6 +145,7 @@
 
   <script src="fourier.js"></script>
   <script src="reel.js"></script>
+  <script src="shared.js"></script>
   <script src="app.js"></script>
   <script src="build.js"></script>
   <script src="encode.js"></script>

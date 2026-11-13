@@ -10,6 +10,7 @@
 
 * { box-sizing: border-box; }
 html { color-scheme: dark; }
+[hidden] { display: none !important; }   /* hidden always wins, even over display: grid */
 
 body {
   margin: 0;
@@ -43,6 +44,21 @@ h1 { margin: 0; font-size: 2rem; letter-spacing: 0.01em; }
   color: #000;
   font-weight: 600;
 }
+
+/* a link that looks like a tab (goes to another page) */
+.tablink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid #4a505a;
+  border-radius: 8px;
+  background: #16191e;
+  color: var(--text);
+  text-decoration: none;
+}
+.tablink:hover { border-color: var(--text); }
+.tablink[aria-current="page"] { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
 
 /* ---------- shared pieces ---------- */
 .mode { max-width: 1400px; margin: 0 auto; padding: 8px 16px 24px; }
@@ -102,7 +118,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .label { font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 
 /* ---------- mode 1 ---------- */
-#build:not([hidden]) {
+.split:not([hidden]) {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
@@ -212,3 +228,22 @@ footer { max-width: 1400px; margin: 0 auto; padding: 16px; color: var(--muted); 
   .stage { width: 100%; }
   h1 { font-size: 1.6rem; }
 }
+
+/* ---------- kolam page ---------- */
+.seg { display: inline-flex; flex-wrap: wrap; }
+.seg button { border-radius: 0; margin-left: -1px; }
+.seg button:first-child { border-radius: 8px 0 0 8px; margin-left: 0; }
+.seg button:last-child { border-radius: 0 8px 8px 0; }
+.seg button[aria-pressed="true"] { background: var(--text); border-color: var(--text); color: #000; position: relative; }
+
+.swatch { width: 44px; padding: 0; background: var(--c); border-color: var(--c); }
+.swatch[aria-pressed="true"] { outline: 2px solid var(--text); outline-offset: 3px; }
+
+.check { display: flex; align-items: center; gap: 8px; }
+.check input { width: 18px; height: 18px; accent-color: var(--accent); }
+
+.steps { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 6px; }
+.steps li::marker { color: var(--accent); font-weight: 600; }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.panel .slider { flex: none; }
