@@ -1,3 +1,6 @@
+// ================= fourier.js: the maths, no drawing =================
+// A "circle" is { radius, speed, start }: speed in whole turns per lap, start angle in radians.
+
 // Return n points spread evenly along the closed loop through `points`
 function resample(points, n) {
   if (points.length < 2) return [];
@@ -9,7 +12,7 @@ function resample(points, n) {
   for (let i = 1; i < loop.length; i++) {
     const [x0, y0] = loop[i - 1];
     const [x1, y1] = loop[i];
-    const len = Math.hypot(x1 - x0, y1 - y0);      // distance between the two dots
+    const len = Math.hypot(x1 - x0, y1 - y0);
     lengths.push(len);
     total += len;
   }
@@ -20,20 +23,19 @@ function resample(points, n) {
   let seg = 0;        // which piece we are on
   let walked = 0;     // distance from the start to the beginning of that piece
   for (let i = 0; i < n; i++) {
-    const target = i * step;                       // where the i-th mark should go
+    const target = i * step;
     while (seg < lengths.length - 1 && walked + lengths[seg] < target) {
-      walked += lengths[seg];                      // the mark is beyond this piece: move on
+      walked += lengths[seg];
       seg++;
     }
-    const f = lengths[seg] === 0 ? 0 : (target - walked) / lengths[seg];   // 0..1 along this piece
+    const f = lengths[seg] === 0 ? 0 : (target - walked) / lengths[seg];
     const [x0, y0] = loop[seg];
     const [x1, y1] = loop[seg + 1];
     result.push([x0 + f * (x1 - x0), y0 + f * (y1 - y0)]);
   }
   return result;
-
-
 }
+
 // Find the circles that draw `points` (a closed loop of evenly spaced [x, y] points).
 // For each speed k: unwind the drawing at speed k, then take the average.
 function dft(points, maxSpeed) {
@@ -43,22 +45,28 @@ function dft(points, maxSpeed) {
     let sumX = 0, sumY = 0;
     for (let n = 0; n < N; n++) {
       const [x, y] = points[n];
-      const a = 2 * Math.PI * k * n / N;      // how far a speed-k circle has turned by point n
-      sumX += x * Math.cos(a) + y * Math.sin(a);   // the point, turned backwards by a
+      const a = 2 * Math.PI * k * n / N;          // how far a speed-k circle has turned by point n
+      sumX += x * Math.cos(a) + y * Math.sin(a);  // the point, turned backwards by a
       sumY += y * Math.cos(a) - x * Math.sin(a);
     }
-    const avgX = sumX / N;                    // the average of all the unwound points
+    const avgX = sumX / N;
     const avgY = sumY / N;
-    circles.push({
-      speed: k,
-      radius: Math.hypot(avgX, avgY),         // distance from the centre
-      start: Math.atan2(avgY, avgX),          // direction, in radians
-    });
+    circles.push({ speed: k, radius: Math.hypot(avgX, avgY), start: Math.atan2(avgY, avgX) });
   }
   return circles;
 }
+
+// The circle that doesn't move (speed 0) first, then the others from biggest to smallest
+function sortCircles(circles) {
+  return circles.slice().sort((a, b) => {
+    if (a.speed === 0) return -1;
+    if (b.speed === 0) return 1;
+    return b.radius - a.radius;
+  });
+}
+
 // Where each circle's centre and the pen are at a moment of the lap (lapPos from 0 to 1).
-// Start angles in radians. Returns [centre of circle 1, centre of circle 2, ..., pen].
+// Returns [centre of circle 1, centre of circle 2, ..., pen].
 function chainAt(circles, lapPos) {
   const result = [[0, 0]];
   let x = 0, y = 0;
@@ -69,4 +77,14 @@ function chainAt(circles, lapPos) {
     result.push([x, y]);
   }
   return result;
+}
+
+// The pen's whole path for one lap
+function pathOf(circles, steps = 720) {
+  const path = [];
+  for (let i = 0; i <= steps; i++) {
+    const chain = chainAt(circles, i / steps);
+    path.push(chain[chain.length - 1]);
+  }
+  return path;
 }

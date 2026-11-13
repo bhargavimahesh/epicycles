@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Epicycle Ink tests</title></head>
+<body style="background:#000;color:#eee;font-family:system-ui">
+  <h1>Tests</h1>
+  <p>Each line below says PASS or FAIL. Open the Console (F12) for details.</p>
+  <ul id="results"></ul>
+  <script src="fourier.js"></script>
+  <script>
+    function check(name, ok) {
+      const li = document.createElement("li");
+      li.textContent = (ok ? "PASS  " : "FAIL  ") + name;
+      li.style.color = ok ? "#3ddc97" : "#ff4d6d";
+      document.getElementById("results").appendChild(li);
+    }
+    const near = (a, b, tol = 0.01) => Math.abs(a - b) < tol;
+
+    // 1. resample: a square with side 100 -> a point every 50
+    const sq = resample([[0, 0], [100, 0], [100, 100], [0, 100]], 8);
+    const expected = [[0,0],[50,0],[100,0],[100,50],[100,100],[50,100],[0,100],[0,50]];
+    check("resample a square", sq.every((p, i) => near(p[0], expected[i][0]) && near(p[1], expected[i][1])));
+
+    // 2. dft: a pure circle of radius 100, speed 1 -> exactly one circle
+    const ring = [];
+    for (let n = 0; n < 64; n++) ring.push([100 * Math.cos(2 * Math.PI * n / 64), 100 * Math.sin(2 * Math.PI * n / 64)]);
+    const found = dft(ring, 3);
+    check("dft finds radius 100 at speed 1", near(found.find(c => c.speed === 1).radius, 100));
+    check("dft finds nothing at other speeds", found.filter(c => c.speed !== 1).every(c => c.radius < 0.01));
+
+    // 3. round trip: circles -> points -> dft -> the same circles
+    const heart = [{ radius: 280, speed: 1, start: -Math.PI / 2 }, { radius: 140, speed: 2, start: -Math.PI / 2 }];
+    const pts = [];
+    for (let n = 0; n < 128; n++) { const c = chainAt(heart, n / 128); pts.push(c[c.length - 1]); }
+    const back = sortCircles(dft(pts, 10));
+    check("round trip: speed 1 radius 280", near(back.find(c => c.speed === 1).radius, 280));
+    check("round trip: speed 2 radius 140", near(back.find(c => c.speed === 2).radius, 140));
+    check("round trip: start angle -90°", near(back.find(c => c.speed === 2).start, -Math.PI / 2));
+
+    // 4. pathOf ends where it starts (every shape closes)
+    const path = pathOf(heart);
+    check("pathOf closes the loop", near(path[0][0], path[path.length - 1][0]) && near(path[0][1], path[path.length - 1][1]));
+  </script>
+</body>
+</html>

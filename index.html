@@ -7,45 +7,146 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <h1>Spinning circles</h1>
-    <p>Each circle spins around the tip of the circle before it. The last tip holds a pen.
-       Change the circle parameters and see what the pen draws.</p>
-    <p><a href="draw.html">Draw your own →</a></p>
+  <header class="top">
+    <div>
+      <h1>Epicycle Ink</h1>
+      <p class="tagline">Any closed drawing can be made from spinning circles.
+        Build shapes from circles, or draw your own and turn it into circles.</p>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Modes">
+      <button role="tab" id="tabBuild" aria-controls="build" aria-selected="true">1 · Build with circles</button>
+      <button role="tab" id="tabEncode" aria-controls="encode" aria-selected="false">2 · Draw and encode</button>
+    </nav>
   </header>
 
-  <main>
-    <canvas id="sheet" width="1200" height="1200"></canvas>
+  <!-- ===================== MODE 1: build with circles ===================== -->
+  <section id="build" class="mode" role="tabpanel" aria-labelledby="tabBuild">
+    <div class="stage">
+      <canvas id="buildCanvas" class="screen" width="1000" height="1000"
+              aria-label="Spinning circles drawing a shape"></canvas>
+      <div class="transport">
+        <button id="bPlay">Pause</button>
+        <label class="slider no-out"><span>Moment</span>
+          <input type="range" id="bScrub" min="0" max="1000" value="0"></label>
+        <label class="slider"><span>Lap time</span>
+          <input type="range" id="bLap" min="2" max="20" value="8"><output id="bLapOut">8 s</output></label>
+      </div>
+    </div>
 
-    <section class="panel">
+    <aside class="panel">
+      <p class="lead">Each circle spins, and the next circle's centre rides on its edge.
+        A pen on the last circle draws the shape.</p>
+      <p class="hint">Speed = turns per lap. A minus speed turns the other way.</p>
+
+      <div id="cardList" class="cards"></div>
+
       <div class="row">
-        <button id="play">Pause</button>
-        <button id="record">Record reel</button>
-        <label class="slider">
-          <span>Time per lap</span>
-          <input type="range" id="lapTime" min="2" max="20" step="1" value="8">
-          <output id="lapOut">8 s</output>
-        </label>
+        <button id="addCircle" class="primary">+ Add a circle</button>
+        <button id="surprise">Surprise me</button>
       </div>
 
-      <div id="arrowList"></div>
-      <button id="add" class="primary">+ Add a circle</button>
-
-      <div class="row presets">
-        <span>Try:</span>
+      <div class="row">
+        <span class="muted">Try:</span>
         <button data-preset="circle">Circle</button>
-        <button data-preset="ellipse">Oval</button>
+        <button data-preset="oval">Oval</button>
         <button data-preset="heart">Heart</button>
         <button data-preset="triangle">Triangle</button>
         <button data-preset="square">Square</button>
         <button data-preset="flower">Flower</button>
+        <button data-preset="galaxy">Galaxy</button>
       </div>
 
-      <p class="challenge"><strong>Challenge:</strong> Triangle uses speeds 1 and −2. Square uses 1 and −3.
+      <p class="note"><strong>Challenge:</strong> Triangle uses speeds 1 and −2. Square uses 1 and −3.
         Can you make a star with 5 corners?</p>
-    </section>
-  </main>
 
-  <script src="epicycles.js"></script>
+      <p class="code" id="buildCode"></p>
+
+      <div class="row">
+        <button id="bSave">Save picture</button>
+        <button id="bRecord">Record reel</button>
+      </div>
+      <p class="status" id="bStatus" role="status"></p>
+    </aside>
+  </section>
+
+  <!-- ===================== MODE 2: draw and encode ===================== -->
+  <section id="encode" class="mode" role="tabpanel" aria-labelledby="tabEncode" hidden>
+    <div class="pair">
+      <figure>
+        <canvas id="pad" class="pad" width="1000" height="1000"
+                aria-label="White drawing pad"></canvas>
+        <figcaption>1. Draw one closed line. Lift the pen when you are done.</figcaption>
+      </figure>
+      <figure>
+        <canvas id="repro" class="screen" width="1000" height="1000"
+                aria-label="Circles redrawing your line"></canvas>
+        <figcaption>2. The circles redraw it.</figcaption>
+      </figure>
+    </div>
+
+    <div class="transport wide-row">
+      <button id="ePlay">Pause</button>
+      <label class="slider no-out"><span>Moment</span>
+        <input type="range" id="eScrub" min="0" max="1000" value="0"></label>
+      <label class="slider"><span>Lap time</span>
+        <input type="range" id="eLap" min="2" max="20" value="8"><output id="eLapOut">8 s</output></label>
+    </div>
+
+    <div class="encode-panel">
+      <div class="block">
+        <label class="slider"><span>Circles</span>
+          <input type="range" id="count" min="1" max="100" value="30"><output id="countOut">30</output></label>
+        <p class="hint">Slide down to keep only the biggest circles.
+          Which part of your drawing disappears first?</p>
+
+        <div class="stats">
+          <div class="stat"><span class="label">Your line</span><strong id="statLine">–</strong></div>
+          <div class="stat"><span class="label">Encoded as</span><strong id="statCode">–</strong></div>
+          <div class="stat"><span class="label">Average miss</span><strong id="statError">–</strong></div>
+        </div>
+
+        <div class="row">
+          <button id="eClear">Clear</button>
+          <span class="muted">Examples:</span>
+          <button data-example="star">Star</button>
+          <button data-example="heart">Heart</button>
+          <button data-example="square">Square</button>
+        </div>
+        <div class="row">
+          <button id="sendBuild" class="primary">Edit the biggest circles in mode 1</button>
+          <button id="eSave">Save picture</button>
+          <button id="eRecord">Record reel</button>
+        </div>
+        <p class="status" id="eStatus" role="status"></p>
+      </div>
+
+      <div class="block">
+        <span class="label">The recipe: circle size for every speed</span>
+        <div class="chart-wrap">
+          <canvas id="spectrum" aria-label="Bar chart of circle radius for speeds minus 50 to plus 50"></canvas>
+          <div id="tip" class="tip" hidden></div>
+        </div>
+        <p class="hint small">Yellow bars are the circles in use. Hover or tap a bar to see its numbers.</p>
+
+        <span class="label">Biggest circles in use</span>
+        <table id="recipe">
+          <thead><tr><th></th><th>Speed</th><th>Radius</th><th>Start</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Made with spinning circles by Bhargavi ·
+    <a href="https://github.com/bhargavimahesh/epicycles">Source on GitHub</a>
+  </footer>
+
+  <script src="fourier.js"></script>
+  <script src="reel.js"></script>
+  <script src="app.js"></script>
+  <script src="build.js"></script>
+  <script src="encode.js"></script>
+  <script>start();</script>
 </body>
 </html>
