@@ -425,15 +425,6 @@ function renderKolam(lap) {
 }
 
 // ---------- controls ----------
-// A row of buttons where exactly one is pressed
-function choice(rowId, attribute, onPick) {
-  const buttons = document.querySelectorAll(`#${rowId} button`);
-  buttons.forEach(button => button.addEventListener("click", () => {
-    buttons.forEach(b => b.setAttribute("aria-pressed", b === button));
-    onPick(button.getAttribute(attribute));
-  }));
-}
-
 choice("kSym", "data-sym", value => { wantedSymmetry = value; newKolam(); });
 choice("kShape", "data-shape", value => { shape = value; buildKolam(); });
 choice("kColours", "data-colour", value => { lineColour = value; });

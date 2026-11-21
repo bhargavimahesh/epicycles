@@ -289,3 +289,17 @@ footer { max-width: 1400px; margin: 0 auto; padding: 16px; color: var(--muted); 
   font-variant-numeric: tabular-nums;
 }
 .table-wrap { overflow-x: auto; }
+
+.chapters button { font-weight: 500; }
+.stack-screen {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #000;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+table.parts td, table.parts th { text-align: left; vertical-align: top; }
+table.parts td:first-child { width: auto; white-space: nowrap; font-weight: 600; }
+table.parts td:last-child { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.card .check { font-size: 0.95rem; }

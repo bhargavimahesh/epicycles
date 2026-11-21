@@ -128,3 +128,13 @@ function makeTransport(prefix) {
   lapInput.addEventListener("input", () => { lapOut.textContent = lapInput.value + " s"; });
   return t;
 }
+
+
+// A row of buttons where exactly one is pressed
+function choice(rowId, attribute, onPick) {
+  const buttons = document.querySelectorAll(`#${rowId} button`);
+  buttons.forEach(button => button.addEventListener("click", () => {
+    buttons.forEach(b => b.setAttribute("aria-pressed", b === button));
+    onPick(button.getAttribute(attribute));
+  }));
+}
