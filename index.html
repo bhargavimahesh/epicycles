@@ -3,20 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Epicycle Ink</title>
+  <title>Chakra Rekha · every line is made of circles</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="top">
     <div>
-      <h1>Epicycle Ink</h1>
-      <p class="tagline">Any closed drawing can be made from spinning circles.
-        Build shapes from circles, draw your own and turn it into circles, or watch a kolam being drawn.</p>
+      <h1>Chakra Rekha</h1>
+      <p class="name-meaning"><em>chakra</em> = wheel, <em>rekha</em> = line</p>
+      <p class="tagline">Every line is made of circles. Build shapes from spinning circles,
+        draw your own and turn it into circles, watch a kolam being drawn, or learn how a circle makes a wave.</p>
     </div>
     <nav class="tabs" role="tablist" aria-label="Modes">
       <button role="tab" id="tabBuild" aria-controls="build" aria-selected="true">1 · Build with circles</button>
       <button role="tab" id="tabEncode" aria-controls="encode" aria-selected="false">2 · Draw and encode</button>
       <button role="tab" id="tabKolam" aria-controls="kolamMode" aria-selected="false">3 · Kolam</button>
+      <button role="tab" id="tabLearn" aria-controls="learnMode" aria-selected="false">4 · Learn</button>
     </nav>
   </header>
 
@@ -257,6 +259,73 @@
     </aside>
   </section>
 
+  <!-- ===================== MODE 4: learn ===================== -->
+  <section id="learnMode" class="mode" role="tabpanel" aria-labelledby="tabLearn" hidden>
+    <div class="learn-stage">
+      <canvas id="learnCanvas" class="wide-screen" width="1600" height="700"
+              aria-label="A spinning circle on the left; on the right, the sine wave its height draws over time"></canvas>
+      <div class="transport">
+        <button id="lPlay">Pause</button>
+        <button id="lReset">Reset time</button>
+        <label class="slider"><span>Time speed</span>
+          <input type="range" id="lSpeed" min="5" max="100" value="50"><output id="lSpeedOut">× 0.50</output></label>
+        <label class="check"><input type="checkbox" id="lOwnWaves" checked> Each circle's own wave</label>
+        <label class="check"><input type="checkbox" id="lLabels" checked> Labels</label>
+      </div>
+    </div>
+
+    <div class="learn-grid">
+      <div class="block learn-text">
+        <h2>What are θ, ω and t?</h2>
+        <h3>1. θ (theta): where the point is</h3>
+        <p>θ is the angle between the arm and the dashed line pointing right, measured anticlockwise.
+          A full turn is 360°, which mathematicians write as 2π radians (about 6.28).</p>
+        <h3>2. t: time</h3>
+        <p>t counts the seconds since the start. Watch it tick in “Right now”. Reset time starts it again at 0.</p>
+        <h3>3. ω (omega): how fast it turns</h3>
+        <p>ω is the angle the arm turns every second, in radians per second.
+          ω = 6.28 (that is 2π) means one full turn per second; ω = 3.14 means half a turn.
+          A minus ω turns the other way.</p>
+        <h3>4. Together: θ = ω · t + φ</h3>
+        <p>After t seconds the arm has turned ω · t. φ (phi) is the angle it started at, when t was 0.</p>
+        <h3>5. The height draws a wave</h3>
+        <p>The height of the point is r · sin θ (its sideways position is r · cos θ).
+          Plot that height over time and you get a sine wave. A longer arm r makes a taller wave.
+          A bigger ω packs more waves into each second: ω ÷ 2π waves per second.</p>
+        <h3>6. Add circles, add waves</h3>
+        <p>Put a second circle on the tip of the first and their heights add up, so their waves add up.
+          With the right circles you can build almost any repeating wave.
+          Try “Square wave”: speeds 1, 3, 5 and 7 times the first circle, radii 1, ⅓, ⅕ and ⅐ of it.
+          That is a Fourier series, the same idea that draws your pictures in modes 1 to 3.</p>
+      </div>
+
+      <div class="block">
+        <span class="label">Right now</span>
+        <p class="formula" id="lNow"></p>
+        <div class="table-wrap">
+          <table id="lTable">
+            <thead><tr><th></th><th>r</th><th>ω (rad/s)</th><th>turns/s</th><th>θ now</th><th>height</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <span class="label">Your circles</span>
+        <div id="lCards" class="cards"></div>
+        <div class="row">
+          <button id="lAdd" class="primary">+ Add a circle</button>
+          <span class="muted">Try:</span>
+          <button data-learn="one">One circle</button>
+          <button data-learn="two">Two circles</button>
+          <button data-learn="square">Square wave</button>
+          <button data-learn="sawtooth">Sawtooth</button>
+        </div>
+        <span class="label">The whole wave as a formula</span>
+        <p class="formula" id="lFormula"></p>
+        <div class="row"><button id="lSave">Save picture</button></div>
+      </div>
+    </div>
+  </section>
+
   <footer>
     Made with spinning circles by Bhargavi ·
     <a href="https://github.com/bhargavimahesh/epicycles">Source on GitHub</a>
@@ -270,6 +339,7 @@
   <script src="build.js"></script>
   <script src="encode.js"></script>
   <script src="kolam.js"></script>
+  <script src="learn.js"></script>
   <script>start();</script>
 </body>
 </html>

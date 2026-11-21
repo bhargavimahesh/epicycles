@@ -6,8 +6,9 @@ const MODES = [
   { name: "build",  tab: "tabBuild",  section: "build",     hash: "#circles" },
   { name: "encode", tab: "tabEncode", section: "encode",    hash: "#draw" },
   { name: "kolam",  tab: "tabKolam",  section: "kolamMode", hash: "#kolam" },
+  { name: "learn",  tab: "tabLearn",  section: "learnMode", hash: "#learn" },
 ];
-const modes = {};          // build.js, encode.js and kolam.js add themselves here
+const modes = {};          // build.js, encode.js, kolam.js and learn.js add themselves here
 let activeMode = "build";
 
 function showMode(name) {
@@ -32,7 +33,7 @@ function tick(timeMs) {
   requestAnimationFrame(tick);
 }
 
-// Which mode does the address ask for? (#circles, #draw or #kolam; mode 1 if none)
+// Which mode does the address ask for? (#circles, #draw, #kolam or #learn; mode 1 if none)
 function modeFromAddress() {
   const m = MODES.find(m => m.hash === location.hash);
   return m ? m.name : "build";

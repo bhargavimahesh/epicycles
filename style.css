@@ -36,6 +36,7 @@ a { color: var(--accent); }
 }
 h1 { margin: 0; font-size: 2rem; letter-spacing: 0.01em; }
 .tagline { margin: 4px 0 0; color: var(--muted); max-width: 60ch; }
+.name-meaning { margin: 2px 0 0; color: var(--accent); font-size: 0.9rem; letter-spacing: 0.02em; }
 
 .tabs { display: flex; flex-wrap: wrap; gap: 6px; }
 .tabs button[aria-selected="true"] {
@@ -252,3 +253,39 @@ footer { max-width: 1400px; margin: 0 auto; padding: 16px; color: var(--muted); 
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 .legend strong { color: var(--text); font-variant-numeric: tabular-nums; }
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--c); }
+
+/* ---------- learn mode ---------- */
+.learn-stage { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+.wide-screen {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1600 / 700;
+  background: #000;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.learn-grid {
+  max-width: 1200px;
+  margin: 16px auto 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.learn-text { gap: 6px; }
+.learn-text h2 { margin: 0 0 4px; font-size: 1.25rem; }
+.learn-text h3 { margin: 10px 0 0; font-size: 1rem; color: var(--accent); }
+.learn-text p { margin: 0; max-width: 65ch; }
+.formula {
+  margin: 0;
+  padding: 10px 12px;
+  background: #000;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.92rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.table-wrap { overflow-x: auto; }
