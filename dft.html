@@ -9,28 +9,22 @@
 <style>
 /* Layout: one card at a time; picture left, words right; arrows on the sides. Marigold and teal accents. */
 :root {
-  --bg: #eef2f7;
-  --card: #ffffff;
-  --fg: #14172b;
-  --muted: #5a6178;
-  --line: #d6dce6;
-  --accent: #b45309;
-  --accent-soft: #fdf1dc;
-  --teal: #0e7490;
-  --screen: #0b0f17;
+  /* always dark, like the Epicycles app */
+  --bg: #16181d; --card: #111316; --fg: #f2f3f5; --muted: #9aa1ad; --line: #2a2e35;
+  --accent: #ffd23f; --accent-soft: #111316; --teal: #4cc9f0; --screen: #000000; color-scheme: dark;
   --display: "Playfair Display", Georgia, serif;
   --body: "Avenir", "Avenir Next", "Nunito Sans", "Segoe UI", system-ui, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0d1117; --card: #161b26; --fg: #e9ecf3; --muted: #9aa3b5; --line: #2a3142;
-    --accent: #fbbf24; --accent-soft: #2a2110; --teal: #22d3ee; --screen: #0b0f17; color-scheme: dark;
+    --bg: #16181d; --card: #111316; --fg: #f2f3f5; --muted: #9aa1ad; --line: #2a2e35;
+  --accent: #ffd23f; --accent-soft: #111316; --teal: #4cc9f0; --screen: #000000; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0d1117; --card: #161b26; --fg: #e9ecf3; --muted: #9aa3b5; --line: #2a3142;
-  --accent: #fbbf24; --accent-soft: #2a2110; --teal: #22d3ee; --screen: #0b0f17; color-scheme: dark;
+  --bg: #16181d; --card: #111316; --fg: #f2f3f5; --muted: #9aa1ad; --line: #2a2e35;
+  --accent: #ffd23f; --accent-soft: #111316; --teal: #4cc9f0; --screen: #000000; color-scheme: dark;
 }
 * { box-sizing: border-box; }
 body { background: var(--bg); color: var(--fg); font-family: var(--body); font-weight: 300; font-size: 17px; line-height: 1.55; margin: 0; }
@@ -48,12 +42,12 @@ header p { margin: 4px 0 0; color: var(--muted); max-width: 70ch; }
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
   gap: 24px;
-  box-shadow: 0 10px 30px rgba(20, 23, 43, 0.18);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 8px 20px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04);
   min-height: 0;
   align-items: center;
   /* the cards are always black, in light and dark mode */
-  --card: #000000; --fg: #eef1f6; --muted: #a3abbd; --line: #262c3a; --bg: #10141d;
-  --accent: #fbbf24; --accent-soft: #1d170a; --teal: #22d3ee; --screen: #000000;
+  --card: #000000; --fg: #f2f3f5; --muted: #9aa1ad; --line: #2a2e35; --bg: #111316;
+  --accent: #ffd23f; --accent-soft: #111316; --teal: #4cc9f0; --screen: #000000;
   background: var(--card); color: var(--fg); border-color: var(--line);
 }
 .card .code { background: #11151f; }
@@ -91,9 +85,9 @@ th:first-child, td:first-child { text-align: left; }
 .side {
   position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
   width: 52px; height: 52px; border-radius: 50%;
-  border: 1px solid var(--line); background: var(--card); color: var(--fg);
+  border: 1px solid var(--line); background: #111316; color: var(--accent);
   font-size: 1.5rem; font-weight: 700; cursor: pointer;
-  box-shadow: 0 6px 18px rgba(20, 23, 43, 0.15);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
 }
 .side.left { left: 0; }
 .side.right { right: 0; }
@@ -102,9 +96,9 @@ button:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
 .dots { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
 .dots button {
   font: inherit; font-size: 0.8rem; font-weight: 700; min-height: 32px; min-width: 32px; border-radius: 50%;
-  border: 1px solid var(--line); background: var(--card); color: var(--fg); cursor: pointer; padding: 0;
+  border: 1px solid var(--line); background: #111316; color: var(--accent); cursor: pointer; padding: 0;
 }
-.dots button[aria-current="true"] { background: var(--accent); border-color: var(--accent); color: var(--card); }
+.dots button[aria-current="true"] { background: var(--accent); border-color: var(--accent); color: #000; }
 .pick { display: flex; align-items: center; gap: 12px; font-weight: 400; }
 .pick input { flex: 1; accent-color: var(--accent); min-height: 32px; }
 .pic { position: relative; }
@@ -206,12 +200,14 @@ const heart16 = resample(heartRaw, 16);
 
 // a drawing made of two arrows (speed 1 and speed 3), used to show the unwinding
 const N2 = 24;
-const twoArrows = [{ speed: 1, radius: 110, start: 0 }, { speed: 3, radius: 45, start: 0.6 }];
+const twoArrows = [{ speed: 1, radius: 110, start: 0 }, { speed: 2, radius: 55, start: 0 }];   // same as card 5
 const twoDots = Array.from({ length: N2 }, (_, n) => tipAt(twoArrows, n / N2));
 
 // ================= drawing helpers (canvas 640 x 520; maths y points up) =================
 const W = 640, H = 520;
-const C = { ring: "#3a4458", r: "#ff6b8b", x: "#fbbf24", y: "#34d399", z: "#7dd3fc", pen: "#ffffff", text: "#cbd5e1", faint: "#6b7488", star: "#fbbf24" };
+// colours from the Epicycles app (shared.js PALETTE, style.css)
+const PALETTE = ["#ff4d6d", "#ffd23f", "#3ddc97", "#4cc9f0", "#b388ff", "#ff8c42", "#f72585", "#c0ff3e", "#80ffdb", "#5e9bff"];
+const C = { ring: "#3b4049", r: "#ff4d6d", x: "#ffd23f", y: "#3ddc97", z: "#4cc9f0", pen: "#ffffff", text: "#f2f3f5", faint: "#9aa1ad", star: "#ffd23f" };
 function clear(g) { g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = "#000000"; g.fillRect(0, 0, W, H); g.lineCap = "round"; g.lineJoin = "round"; }
 function seg(g, x0, y0, x1, y1, col, w = 3, dash) { g.setLineDash(dash || []); g.strokeStyle = col; g.lineWidth = w; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); g.setLineDash([]); }
 function arrow(g, x0, y0, x1, y1, col, w = 4) {
@@ -241,11 +237,14 @@ function star(g, x, y, r, col) {
   g.closePath(); g.fill();
 }
 const P = (cx, cy, x, y) => [cx + x, cy - y];
+function ringA(g, x, y, r, col) { g.globalAlpha = 0.5; ring(g, x, y, r, col, 1.5); g.globalAlpha = 1; }
+function penDot(g, x, y, r = 8) { g.shadowColor = C.x; g.shadowBlur = 16; dot(g, x, y, r, C.pen); g.shadowBlur = 0; }
 function pathLine(g, pts, cx, cy, col, w, upto) {
+  if (col === C.pen) { g.shadowColor = C.pen; g.shadowBlur = 10; }   // the drawing glows, as in the app
   g.strokeStyle = col; g.lineWidth = w; g.beginPath();
   const n = upto === undefined ? pts.length : upto;
   for (let i = 0; i < n; i++) { const [sx, sy] = P(cx, cy, pts[i][0], pts[i][1]); i ? g.lineTo(sx, sy) : g.moveTo(sx, sy); }
-  g.stroke();
+  g.stroke(); g.shadowBlur = 0;
 }
 function chain(g, circles, p, cx, cy, ringCol, heads) {
   let x = 0, y = 0;
@@ -253,9 +252,10 @@ function chain(g, circles, p, cx, cy, ringCol, heads) {
     const a = c.start + 2 * Math.PI * c.speed * p;
     const nx = x + c.radius * Math.cos(a), ny = y + c.radius * Math.sin(a);
     const [sx, sy] = P(cx, cy, x, y), [ex, ey] = P(cx, cy, nx, ny);
-    if (c.speed !== 0 && c.radius > 1) ring(g, sx, sy, c.radius, ringCol || C.ring, 1.5);
-    if (heads) arrow(g, sx, sy, ex, ey, i % 2 ? C.z : C.r, 4);
-    else seg(g, sx, sy, ex, ey, i % 2 ? C.z : C.r, 3);
+    const col = circles.length > 2 ? PALETTE[i % PALETTE.length] : (i % 2 ? C.z : C.r);
+    if (c.speed !== 0 && c.radius > 1) ringA(g, sx, sy, c.radius, col);
+    if (heads) arrow(g, sx, sy, ex, ey, col, 4);
+    else { g.globalAlpha = 0.95; seg(g, sx, sy, ex, ey, col, 2.5); g.globalAlpha = 1; }
     x = nx; y = ny;
   });
   return P(cx, cy, x, y);
@@ -263,7 +263,7 @@ function chain(g, circles, p, cx, cy, ringCol, heads) {
 const turnBack = ([X, Y], a) => [X * Math.cos(a) + Y * Math.sin(a), Y * Math.cos(a) - X * Math.sin(a)];
 
 // ================= one picture per card (sec = seconds since the card was opened) =================
-const ARROW_COLS = ["#a78bfa", "#fb923c", "#e879f9", "#a3e635"];
+const ARROW_COLS = ["#b388ff", "#ff8c42", "#f72585", "#c0ff3e"];
 const flower = [{ speed: 1, radius: 105, start: 0 }, { speed: -4, radius: 58, start: 0 }, { speed: 6, radius: 36, start: 0 }, { speed: -9, radius: 22, start: 0 }];
 const flowerPath = shapeOf(flower);
 const lapHeart = [{ speed: 1, radius: 110, start: 0 }, { speed: 2, radius: 55, start: 0 }];   // both start along the floor
@@ -300,15 +300,15 @@ const DRAW = {
   // 2. the complex plane
   plane(g, sec) {
     const cx = 300, cy = 280, U = 45, th = Math.PI / 4 + (Math.PI / 4) * Math.sin(0.35 * sec), R = 4;
-    for (let i = -5; i <= 6; i++) { seg(g, cx + i * U, 40, cx + i * U, H - 40, "#161d2b", 1); }
-    for (let j = -4; j <= 4; j++) { seg(g, 20, cy - j * U, W - 20, cy - j * U, "#161d2b", 1); }
+    for (let i = -5; i <= 6; i++) { seg(g, cx + i * U, 40, cx + i * U, H - 40, "#15181d", 1); }
+    for (let j = -4; j <= 4; j++) { seg(g, 20, cy - j * U, W - 20, cy - j * U, "#15181d", 1); }
     arrow(g, 30, cy, W - 20, cy, C.faint, 2); arrow(g, cx, H - 30, cx, 30, C.faint, 2);
     label(g, "real", W - 24, cy + 26, C.x, 18, "right"); label(g, "imaginary (i)", cx + 10, 44, C.y, 18);
     for (let i = 1; i <= 4; i++) {
       label(g, String(i), cx + i * U, cy + 20, C.faint, 14, "center");
       label(g, String(i), cx - 8, cy - i * U + 5, C.faint, 14, "right");
     }
-    ring(g, cx, cy, R * U, "rgba(125,211,252,0.25)", 1.5);
+    ring(g, cx, cy, R * U, "rgba(76,201,240,0.25)", 1.5);
     const X = R * Math.cos(th), Y = R * Math.sin(th);
     const [x, y] = P(cx, cy, X * U, Y * U);
     seg(g, cx, cy, x, cy, C.x, 6); seg(g, x, cy, x, y, C.y, 6);
@@ -322,19 +322,19 @@ const DRAW = {
   // 3. adding circles
   sum(g, sec) {
     const cx = 320, cy = 260, p = (sec / 12) % 1, cols = ARROW_COLS;
-    pathLine(g, flowerPath, cx, cy, "rgba(255,255,255,0.12)", 2);
+    pathLine(g, flowerPath, cx, cy, "rgba(255,255,255,0.10)", 2);
     pathLine(g, flowerPath, cx, cy, C.pen, 3, Math.floor(p * 400) + 1);
     let x = 0, y = 0;
     flower.forEach((c, i) => {
       const a = c.start + 2 * Math.PI * c.speed * p;
       const nx = x + c.radius * Math.cos(a), ny = y + c.radius * Math.sin(a);
       const [sx, sy] = P(cx, cy, x, y), [ex, ey] = P(cx, cy, nx, ny);
-      ring(g, sx, sy, c.radius, C.ring, 1.5);
+      ringA(g, sx, sy, c.radius, cols[i]);
       arrow(g, sx, sy, ex, ey, cols[i], 4);
       x = nx; y = ny;
     });
     const [px, py] = P(cx, cy, x, y);
-    dot(g, px, py, 7, C.pen);
+    penDot(g, px, py, 7);
   },
   // 4. start angles
   start(g, sec) {
@@ -373,10 +373,10 @@ const DRAW = {
     const cx = 200, cy = 230, tsec = sec % (PERIOD + 1.5), t = Math.min(tsec, PERIOD), p = t / PERIOD;
     seg(g, cx - 140, cy, cx + 200, cy, C.ring, 1.5);
     label(g, "floor", cx - 140, cy - 10, C.faint, 15);
-    pathLine(g, lapHeartPath, cx, cy, "rgba(255,255,255,0.12)", 2);
+    pathLine(g, lapHeartPath, cx, cy, "rgba(255,255,255,0.10)", 2);
     pathLine(g, lapHeartPath, cx, cy, C.pen, 3, Math.floor(p * 400) + 1);
     const [px, py] = chain(g, lapHeart, p, cx, cy, null, true);
-    dot(g, px, py, 8, C.pen);
+    penDot(g, px, py, 8);
     const tx = 430;
     label(g, `t = ${t.toFixed(1)} s`, tx, 90, C.pen, 24);
     label(g, `T = ${PERIOD} s per lap`, tx, 124, C.text, 18);
@@ -400,33 +400,39 @@ const DRAW = {
     }
   },
   // 7. evenly spaced dots = time steps
-  dots(g, sec) {
-    const cx = 300, cy = 240, on = Math.floor(sec * 1.2) % 16;
-    pathLine(g, [...heartRaw, heartRaw[0]], cx, cy, "rgba(255,255,255,0.2)", 2);
-    heart16.forEach(([X, Y], n) => {
-      const [x, y] = P(cx, cy, X, Y);
+  dots(g, sec) {   // card 5's drawing, sampled at N = 16 equal time steps
+    const cx = 280, cy = 285, S = 1.05, N = 16, on = Math.floor(sec * 1.2) % N, placed = [];
+    seg(g, 40, cy, 600, cy, C.ring, 1.5); label(g, "floor", 44, cy - 10, C.faint, 15);
+    pathLine(g, shapeOf(twoArrows).map(([X, Y]) => [X * S, Y * S]), cx, cy, "rgba(255,255,255,0.2)", 2);
+    for (let n = 0; n < N; n++) {
+      const [X, Y] = tipAt(twoArrows, n / N), [x, y] = P(cx, cy, X * S, Y * S);
       dot(g, x, y, n === on ? 10 : 6, n === on ? C.x : C.z);
-      label(g, String(n), x + 11, y - 9, n === on ? C.x : C.faint, 15);
-    });
-    const [ox, oy] = P(cx, cy, 0, 0); dot(g, ox, oy, 4, C.text); label(g, "(0, 0)", ox + 7, oy + 18, C.faint, 14);
+      const out = Math.hypot(X, Y) > 1 ? [X / Math.hypot(X, Y), Y / Math.hypot(X, Y)] : [1, 0];
+      const lx = x + 18 * out[0], ly = y - 18 * out[1] + 5;
+      if (n === on || placed.every(([px, py]) => Math.hypot(px - lx, py - ly) > 16)) {   // skip labels that would overlap
+        label(g, String(n), lx, ly, n === on ? C.x : C.faint, 14, "center"); placed.push([lx, ly]);
+      }
+    }
     label(g, `N = 16 points.   Point n = ${on}:`, 20, 40, C.text, 18);
     label(g, `t${sub(on)} = ${on} × T ÷ 16 = ${(on * PERIOD / 16).toFixed(2)} s   (T = ${PERIOD} s)`, 20, 68, C.x, 18);
   },
   // ride along: normal view vs. view spinning with arrow 1
   ride(g, sec) {
-    const p = (sec / 8) % 1, S = 0.72;
+    const p = (sec / PERIOD) % 1, S = 0.72, [A, B] = twoArrows;   // the two arrows from card 5
     [[165, false], [480, true]].forEach(([cx, spin]) => {
-      const cy = 270, back = spin ? 2 * Math.PI * p : 0;
+      const cy = 270, back = spin ? 2 * Math.PI * A.speed * p : 0;
       const pts = shapeOf(twoArrows).map(d => turnBack(d, back).map(v => v * S));
       if (!spin) pathLine(g, pts, cx, cy, "rgba(255,255,255,0.15)", 2);
-      const [a1x, a1y] = turnBack([110 * Math.cos(2 * Math.PI * p), 110 * Math.sin(2 * Math.PI * p)], back);
-      const a2 = 0.6 + 2 * Math.PI * 3 * p, [b2x, b2y] = turnBack([45 * Math.cos(a2), 45 * Math.sin(a2)], back);
+      const aA = A.start + 2 * Math.PI * A.speed * p, aB = B.start + 2 * Math.PI * B.speed * p;
+      const [a1x, a1y] = turnBack([A.radius * Math.cos(aA), A.radius * Math.sin(aA)], back);
+      const [b2x, b2y] = turnBack([B.radius * Math.cos(aB), B.radius * Math.sin(aB)], back);
       const [x1, y1] = P(cx, cy, a1x * S, a1y * S), [x2, y2] = P(cx, cy, (a1x + b2x) * S, (a1y + b2y) * S);
-      ring(g, x1, y1, 45 * S, C.ring, 1.5);
+      ringA(g, cx, cy, A.radius * S, C.r);
+      ringA(g, x1, y1, B.radius * S, C.z);
       arrow(g, cx, cy, x1, y1, C.r, 5); arrow(g, x1, y1, x2, y2, C.z, 4); dot(g, x2, y2, 6, C.pen);
-      label(g, spin ? "turned back with k = 1" : "normal view", cx, 60, C.pen, 20, "center");
-      label(g, spin ? "big arrow: frozen" : "both arrows turn", cx, 440, C.x, 18, "center");
-      label(g, spin ? "small arrow: still turns" : "", cx, 466, C.z, 18, "center");
+      label(g, spin ? "turned back with k = 1" : "normal view (card 5)", cx, 60, C.pen, 20, "center");
+      label(g, spin ? "k = 1: frozen" : "both arrows turn", cx, 440, spin ? C.r : C.x, 18, "center");
+      label(g, spin ? "k = 2: still turns, once per lap" : "", cx, 466, C.z, 18, "center");
     });
     seg(g, 320, 90, 320, 420, C.ring, 1, [4, 6]);
   },
@@ -440,7 +446,7 @@ const DRAW = {
         const a = spinning ? start + 2 * Math.PI * n / N : start;
         const X = R * Math.cos(a), Y = R * Math.sin(a); sx += X; sy += Y;
         const [x, y] = P(cx, cy, X, Y);
-        arrow(g, cx, cy, x, y, n === shown - 1 ? C.r : "rgba(255,107,139,0.35)", 3);
+        arrow(g, cx, cy, x, y, n === shown - 1 ? C.r : "rgba(255,77,109,0.35)", 3);
       }
       const [ax, ay] = P(cx, cy, sx / shown, sy / shown);
       star(g, ax, ay, 13, C.star);
@@ -463,7 +469,7 @@ const DRAW = {
     if (len > 2) arrow(g, cx, cy, ax, ay, C.star, 5);
     star(g, ax, ay, 13, C.star);
     label(g, `turned back with k = ${k}`, 20, 40, C.pen, 20);
-    label(g, len > 2 ? `★ average: a circle of radius ${len.toFixed(0)}` : "★ average ≈ 0: no circle with this k", 20, 480, C.x, 19);
+    label(g, len > 2 ? `★ average: a circle of radius ${len.toFixed(0)}` : "★ average ≈ 0: no circle with this k", 20, 68, C.x, 19);
   },
   // c_k as an arrow: length r_k, direction φ_k; the circle it draws
   polar(g, sec) {
@@ -485,19 +491,19 @@ const DRAW = {
     const cx = 260, cy = 260, cyc = 6, q = (sec % cyc) / cyc;
     const s = q < 0.45 ? q / 0.45 : q < 0.8 ? 1 : 1 - (q - 0.8) / 0.2;
     seg(g, 40, cy, 470, cy, C.ring, 1, [6, 8]);
-    pathLine(g, [...twoDots, twoDots[0]], cx, cy, "rgba(255,255,255,0.12)", 2);
+    pathLine(g, [...twoDots, twoDots[0]], cx, cy, "rgba(255,255,255,0.10)", 2);
     let sx = 0, sy = 0;
     twoDots.forEach((d, n) => {
       const [ux, uy] = turnBack(d, s * 2 * Math.PI * 1 * n / N2);
       sx += ux; sy += uy;
       const [x, y] = P(cx, cy, ux, uy); dot(g, x, y, 5, C.z);
     });
-    if (s > 0.98) { const [ax, ay] = P(cx, cy, sx / N2, sy / N2); arrow(g, cx, cy, ax, ay, C.star, 4); star(g, ax, ay, 13, C.star); label(g, "average = c₁", ax, ay + 34, C.x, 17, "center"); }
+    if (s > 0.98) { const [ax, ay] = P(cx, cy, sx / N2, sy / N2); arrow(g, cx, cy, ax, ay, C.star, 4); star(g, ax, ay, 13, C.star); label(g, "★ average = c₁", cx + 100, 440, C.x, 18, "center"); }
     label(g, "k = 1: turn point n back", 20, 40, C.text, 19);
     label(g, "by 2π·1·n ÷ N", 20, 66, C.text, 19);
     label(g, `turned back: ${(s * 100).toFixed(0)}%`, 20, 98, C.x, 17);
-    label(g, "this drawing = a big arrow (k = 1)", 620, 40, C.faint, 16, "right");
-    label(g, "+ a small arrow (k = 3)", 620, 64, C.faint, 16, "right");
+    label(g, "the drawing from card 5:", 620, 40, C.faint, 16, "right");
+    label(g, "arrows k = 1 and k = 2", 620, 64, C.faint, 16, "right");
   },
   // 9. why it works
   cancel(g, sec) {
@@ -553,10 +559,10 @@ const DRAW = {
   epicycles(g, sec) {
     const cx = 320, cy = 245, p = (sec / 10) % 1, use = heartSorted.slice(0, 31);
     const path = shapeOf(use);
-    pathLine(g, [...heart128, heart128[0]], cx, cy, "rgba(255,255,255,0.12)", 2);
+    pathLine(g, [...heart128, heart128[0]], cx, cy, "rgba(255,255,255,0.10)", 2);
     pathLine(g, path, cx, cy, C.pen, 3, Math.floor(p * 400) + 1);
-    const [px, py] = chain(g, use, p, cx, cy, "rgba(125,211,252,0.25)");
-    dot(g, px, py, 8, C.x);
+    const [px, py] = chain(g, use, p, cx, cy, "rgba(76,201,240,0.25)");
+    penDot(g, px, py, 8);
     label(g, "the 30 biggest circles redraw the heart", 20, 40, C.text, 19);
   },
 };
@@ -571,21 +577,21 @@ const R = String.raw;
 const CARDS = [
   { draw: "circle", title: "A point on a circle",
     body: R`<p>The point can be denoted by:</p>
-      <ul><li>the <b>radius</b> \({\color[RGB]{255,107,139}r}\) (how far from the centre)</li><li>the <b>angle</b> \(\theta\) (which direction from the floor)</li></ul>
-      <p>Its projection on the floor is \({\color[RGB]{251,191,36}x}\), its projection on the wall is \({\color[RGB]{52,211,153}y}\).</p>`,
-    formula: R`\[ {\color[RGB]{251,191,36}x = {\color[RGB]{255,107,139}r}\cos\theta}, \qquad {\color[RGB]{52,211,153}y = {\color[RGB]{255,107,139}r}\sin\theta} \]` },
+      <ul><li>the <b>radius</b> \({\color[RGB]{255,77,109}r}\) (how far from the centre)</li><li>the <b>angle</b> \(\theta\) (which direction from the floor)</li></ul>
+      <p>Its projection on the floor is \({\color[RGB]{255,210,63}x}\), its projection on the wall is \({\color[RGB]{61,220,151}y}\).</p>`,
+    formula: R`\[ {\color[RGB]{255,210,63}x = {\color[RGB]{255,77,109}r}\cos\theta}, \qquad {\color[RGB]{61,220,151}y = {\color[RGB]{255,77,109}r}\sin\theta} \]` },
 
   { draw: "plane", title: "The complex plane",
     body: R`<p>The floor and the wall now become the two axes of a <b>complex plane</b>.</p>
-      <p>Let \({\color[RGB]{125,211,252}z} = {\color[RGB]{251,191,36}x} + i{\color[RGB]{52,211,153}y}\).</p>`,
-    formula: R`\[ {\color[RGB]{125,211,252}z} = {\color[RGB]{251,191,36}x} + i\,{\color[RGB]{52,211,153}y} = {\color[RGB]{255,107,139}r}{\color[RGB]{251,191,36}\cos\theta} + i\,{\color[RGB]{255,107,139}r}{\color[RGB]{52,211,153}\sin\theta} = {\color[RGB]{255,107,139}r}e^{i\theta} \]`,
-    after: R`<p>Using Euler's formula, \(e^{i\theta} = \cos\theta + i\sin\theta\), we can set \({\color[RGB]{125,211,252}z} = {\color[RGB]{255,107,139}r}e^{i\theta}\): an arrow of length \({\color[RGB]{255,107,139}r}\) at angle \(\theta\). Turning by \(a\) means multiplying by \(e^{ia}\).</p>` },
+      <p>Let \({\color[RGB]{76,201,240}z} = {\color[RGB]{255,210,63}x} + i{\color[RGB]{61,220,151}y}\).</p>`,
+    formula: R`\[ {\color[RGB]{76,201,240}z} = {\color[RGB]{255,210,63}x} + i\,{\color[RGB]{61,220,151}y} = {\color[RGB]{255,77,109}r}{\color[RGB]{255,210,63}\cos\theta} + i\,{\color[RGB]{255,77,109}r}{\color[RGB]{61,220,151}\sin\theta} = {\color[RGB]{255,77,109}r}e^{i\theta} \]`,
+    after: R`<p>Using Euler's formula, \(e^{i\theta} = \cos\theta + i\sin\theta\), we can set \({\color[RGB]{76,201,240}z} = {\color[RGB]{255,77,109}r}e^{i\theta}\): an arrow of length \({\color[RGB]{255,77,109}r}\) at angle \(\theta\). Turning by \(a\) means multiplying by \(e^{ia}\).</p>` },
 
   { draw: "sum", title: "Going beyond a single circle",
     body: R`<p>For more circles, <b>add</b> arrows tip to tail. The last tip holds the pen.</p>
       <p>A circle riding on a circle is an <b>epicycle</b>.</p>
       <p>\(z_k\) is the \(k\)-th circle's arrow.</p>`,
-    formula: R`\[ z = {\color[RGB]{167,139,250}z_1} + {\color[RGB]{251,146,60}z_2} + {\color[RGB]{232,121,249}z_3} + {\color[RGB]{163,230,53}z_4} = \sum_k z_k \]`,
+    formula: R`\[ z = {\color[RGB]{179,136,255}z_1} + {\color[RGB]{255,140,66}z_2} + {\color[RGB]{247,37,133}z_3} + {\color[RGB]{192,255,62}z_4} = \sum_k z_k \]`,
     after: R`<p>The arrows turn, so \(z\) is a function of time:</p>
       <div class="formula">\[ z(t) = \sum_k z_k(t) \]</div>` },
 
@@ -599,27 +605,22 @@ const CARDS = [
     body: R`<p>We label each circle by \(k\), the <b>number of whole turns it makes per lap</b>. So every arrow is back where it began at the start of the lap.</p>
       <p>\(\theta_k\) is how far circle \(k\)'s arrow has turned so far: the \(\theta\) of card 1, now for circle \(k\).</p>`,
     formula: R`\[ \theta_k = \omega_k\, t = \frac{2\pi k\, t}{T}, \quad \text{where } \omega_k = \frac{2\pi k}{T} \]`,
-    after: R`<p>When \(k = 1\), it turns exactly once per lap: the <b>base circle</b> (\(k = -1\) turns once the other way).</p>` },
+    after: R`<p>When \(k = 1\), it turns exactly once per lap: the <b>base circle</b> <span style="white-space: nowrap">(\(k = -1\)</span> turns once the other way).</p>` },
 
   { draw: "puzzle", title: "From a drawing to epicycles",
     body: R`<p>On <button class="goto" data-card="3">card 3</button>, \(z(t) = \sum_k z_k(t)\): each arrow \(z_k(t)\) is a <b>function of time</b>.</p>
       <p>Let \(c_k\) be arrow \(k\) at the start of the lap: one per circle. <span class="hint-inline">(hint: \(c_k\) is not just the radius \(r_k\))</span></p>
       <p>As time runs, arrow \(k\) is \(c_k\) turned by \(\theta_k\). Over one lap, the pen traces the drawing:</p>`,
     formula: R`\[ \begin{gathered} z(t) = \sum_k c_k\, e^{i 2\pi k t / T} \\[10pt] \text{where} \quad z_k(t) = c_k\, e^{i 2\pi k t / T}, \quad c_k = z_k(0) \end{gathered} \]`,
-    after: R`<p>The puzzle: given the drawing, find every \(c_k\). Welcome to the job of the <b>Discrete Fourier Transform (DFT)</b>!</p>` },
-
-  { draw: "dots", title: "Evenly spaced points",
-    body: R`<p>Take \(N\) points, evenly spaced along the line. Point \(n\) is one <b>time step</b>, \(n = 0, 1, \dots, N-1\).</p>
-      <p>\({\color[RGB]{251,191,36}t_n}\) is the moment the pen reaches point \(n\); \({\color[RGB]{125,211,252}z_n}\) is where the pen is then.</p>`,
-    formula: R`\[ \begin{gathered} {\color[RGB]{251,191,36}t_n} = \frac{n\,T}{N}, \qquad {\color[RGB]{125,211,252}z_n} = z({\color[RGB]{251,191,36}t_n}) = x_n + i\,y_n \\[10pt] \text{where } T \text{ is the lap time} \end{gathered} \]`,
-    after: R`<p>Previously \(z(t)\) was <b>continuous</b> in time. Now it becomes <b>discrete</b>: a list \({\color[RGB]{125,211,252}z_n}\), one value per time step. That is the D in DFT.</p>` },
+    after: R`<p>The puzzle: given the drawing, how do we find every \(c_k\)?</p>
+      <p style="color: var(--accent)">Welcome to the job of the <b>Discrete Fourier Transform (DFT)</b>!</p>` },
 
   { draw: "ride", title: "Turn everything back",
-    body: R`<p>From card 6, the drawing is \(z(t) = \sum_j c_j\, e^{i 2\pi j t / T}\), where \(j\) runs over all the arrows.</p>
+    body: R`<p>The drawing is \(z(t) = \sum_j c_j\, e^{i 2\pi j t / T}\), where \(j\) runs over all the arrows.</p>
       <p>To find one \(c_k\), turn the whole drawing <b>back</b> by arrow \(k\)'s angle \(2\pi k t / T\). Turning back means multiplying by \(e^{-i 2\pi k t / T}\) (card 2, but backwards):</p>`,
     formula: R`\[ z(t)\, e^{-i 2\pi k t / T} = c_k + \sum_{j \neq k} c_j\, e^{i 2\pi (j-k) t / T} \]`,
     after: R`<p>Arrow \(k\) is now <b>frozen</b> at \(c_k\). Every other arrow \(j\) still <b>turns</b>, \(j - k\) times per lap.</p>
-      <p class="hint-inline">In the picture: arrows with \(k = 1\) (big) and \(k = 3\) (small), turned back with \(k = 1\).</p>` },
+      <p class="hint-inline">In the picture: the two arrows from card 5, \(k = 1\) and \(k = 2\), turned back with \(k = 1\).</p>` },
 
   { draw: "zero", title: "Turning arrows average to zero",
     body: R`<p>Now take the <b>average over one lap</b>.</p>
@@ -627,18 +628,24 @@ const CARDS = [
     formula: R`\[ \text{average over the lap of } z(t)\, e^{-i 2\pi k t / T} = c_k \]`,
     after: R`<p>Everything except \(c_k\) cancels out.</p>` },
 
+  { draw: "dots", title: "Evenly spaced points",
+    body: R`<p>Take \(N\) points on the drawing from card 5, evenly spaced <b>in time</b>. Point \(n\) is one <b>time step</b>, \(n = 0, 1, \dots, N-1\).</p>
+      <p>\({\color[RGB]{255,210,63}t_n}\) is the moment the pen reaches point \(n\); \({\color[RGB]{76,201,240}z_n}\) is where the pen is then.</p>`,
+    formula: R`\[ \begin{gathered} {\color[RGB]{255,210,63}t_n} = \frac{n\,T}{N}, \qquad {\color[RGB]{76,201,240}z_n} = z({\color[RGB]{255,210,63}t_n}) = x_n + i\,y_n \\[10pt] \text{where } T \text{ is the lap time} \end{gathered} \]`,
+    after: R`<p>Previously \(z(t)\) was <b>continuous</b> in time. Now it becomes <b>discrete</b>: a list \({\color[RGB]{76,201,240}z_n}\), one value per time step. That is the D in DFT.</p>` },
+
   { draw: "unwind", title: "With points: the DFT",
-    body: R`<p>We only have the points \({\color[RGB]{125,211,252}z_n}\) at the times \({\color[RGB]{251,191,36}t_n}\) (card 7). There, the turn-back angle is</p>`,
-    formula: R`\[ \frac{2\pi k\, {\color[RGB]{251,191,36}t_n}}{T} = \frac{2\pi k n}{N} \]`,
+    body: R`<p>We only have the points \({\color[RGB]{76,201,240}z_n}\) at the times \({\color[RGB]{255,210,63}t_n}\) (card 9). There, the turn-back angle is</p>`,
+    formula: R`\[ \frac{2\pi k\, {\color[RGB]{255,210,63}t_n}}{T} = \frac{2\pi k n}{N} \]`,
     after: R`<p>Turn each point back, add them up and divide by \(N\): the average over the points.</p>
-      <div class="formula">\[ c_k = \frac{1}{N} \sum_{n=0}^{N-1} {\color[RGB]{125,211,252}z_n}\, e^{-i 2\pi k n / N} \]</div>
+      <div class="formula">\[ c_k = \frac{1}{N} \sum_{n=0}^{N-1} {\color[RGB]{76,201,240}z_n}\, e^{-i 2\pi k n / N} \]</div>
       <p>This is the <b>DFT</b>.</p>` },
 
   { draw: "pick", title: "Try every k",
     body: R`<p>Pick \(k\), turn the points back and average them (★). Only arrows that are really in the drawing survive.</p>`,
     after: R`<label class="pick">\(k\): <b id="kVal">1</b>
         <input type="range" id="pickK" min="-3" max="5" step="1" value="1"></label>
-      <p>Only \(k = 1\) and \(k = 3\) leave an arrow: exactly the two circles in the drawing.</p>` },
+      <p>Only \(k = 1\) and \(k = 2\) leave an arrow: exactly the two circles from card 5.</p>` },
 
   { draw: "four", title: "By hand: 4 points",
     body: R`<p>Points: \(z_0 = 2,\; z_1 = 2i,\; z_2 = -2,\; z_3 = -2i\). Here \(N = 4\), so point \(n\) is turned back by \(n \cdot 90°\) for \(k = 1\).</p>`,
@@ -654,10 +661,10 @@ const CARDS = [
 
   { draw: "polar", title: "From \\(c_k\\) to a circle",
     body: R`<p>\(c_k\) is an arrow, just like \(z = re^{i\theta}\) on card 2.</p>
-      <ul><li>its <b>length</b> is the radius \({\color[RGB]{255,107,139}r_k}\)</li>
+      <ul><li>its <b>length</b> is the radius \({\color[RGB]{255,77,109}r_k}\)</li>
         <li>its <b>direction</b> is the <b>start angle</b> \(\varphi_k\): where circle \(k\) points when the lap begins</li></ul>`,
-    formula: R`\[ c_k = {\color[RGB]{255,107,139}r_k}\, e^{i\varphi_k}, \quad \text{where } {\color[RGB]{255,107,139}r_k} = |c_k|, \ \varphi_k = \arg c_k \]`,
-    after: R`<p>So each circle is three numbers: radius \({\color[RGB]{255,107,139}r_k}\), turns per lap \(k\), start angle \(\varphi_k\).</p>` },
+    formula: R`\[ c_k = {\color[RGB]{255,77,109}r_k}\, e^{i\varphi_k}, \quad \text{where } {\color[RGB]{255,77,109}r_k} = |c_k|, \ \varphi_k = \arg c_k \]`,
+    after: R`<p>So each circle is three numbers: radius \({\color[RGB]{255,77,109}r_k}\), turns per lap \(k\), start angle \(\varphi_k\).</p>` },
 
   { draw: "epicycles", title: "The epicycles",
     body: R`<p>The DFT of the heart gives one circle per \(k\). The biggest ones:</p>`,
