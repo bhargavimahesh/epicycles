@@ -1,0 +1,777 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DFT Flash Cards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Nunito+Sans:ital,wght@0,300;0,400;0,700;1,300&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one card at a time; picture left, words right; arrows on the sides. Marigold and teal accents. */
+:root {
+  --bg: #eef2f7;
+  --card: #ffffff;
+  --fg: #14172b;
+  --muted: #5a6178;
+  --line: #d6dce6;
+  --accent: #b45309;
+  --accent-soft: #fdf1dc;
+  --teal: #0e7490;
+  --screen: #0b0f17;
+  --display: "Playfair Display", Georgia, serif;
+  --body: "Avenir", "Avenir Next", "Nunito Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1117; --card: #161b26; --fg: #e9ecf3; --muted: #9aa3b5; --line: #2a3142;
+    --accent: #fbbf24; --accent-soft: #2a2110; --teal: #22d3ee; --screen: #0b0f17; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1117; --card: #161b26; --fg: #e9ecf3; --muted: #9aa3b5; --line: #2a3142;
+  --accent: #fbbf24; --accent-soft: #2a2110; --teal: #22d3ee; --screen: #0b0f17; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-weight: 300; font-size: 17px; line-height: 1.55; margin: 0; }
+b, strong { font-weight: 700; }
+.wrap { max-width: 1200px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 40px; display: flex; flex-direction: column; gap: 16px; }
+header h1 { font-family: var(--display); font-weight: 600; font-size: clamp(1.6rem, 4vw, 2.2rem); margin: 0; text-wrap: balance; }
+header p { margin: 4px 0 0; color: var(--muted); max-width: 70ch; }
+
+.stage { position: relative; padding-inline: 34px; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 24px;
+  box-shadow: 0 10px 30px rgba(20, 23, 43, 0.18);
+  min-height: 0;
+  align-items: center;
+  /* the cards are always black, in light and dark mode */
+  --card: #000000; --fg: #eef1f6; --muted: #a3abbd; --line: #262c3a; --bg: #10141d;
+  --accent: #fbbf24; --accent-soft: #1d170a; --teal: #22d3ee; --screen: #000000;
+  background: var(--card); color: var(--fg); border-color: var(--line);
+}
+.card .code { background: #11151f; }
+.card.enter { animation: enter 0.35s ease; }
+@keyframes enter { from { opacity: 0; transform: translateX(var(--from, 24px)); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .card.enter { animation: none; } }
+canvas { display: block; width: 100%; height: auto; border-radius: 12px; background: var(--screen); }
+.words { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.chip { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+.words h2 { font-family: var(--display); font-weight: 600; font-size: 1.6rem; margin: 0; line-height: 1.2; text-wrap: balance; }
+.words p { margin: 0; max-width: 62ch; }
+.words ul { margin: -4px 0 0; padding-left: 1.3em; }
+.formula {
+  font-size: 1.05rem; padding: 4px 14px; border-radius: 10px;
+  background: var(--accent-soft); border-left: 4px solid var(--accent); overflow-x: auto; overflow-y: hidden;
+}
+.code {
+  font-family: var(--mono); font-size: 0.82rem; padding: 12px 14px; border-radius: 10px;
+  background: var(--screen); color: #e5e7eb; overflow-x: auto; white-space: pre;
+}
+.small-label { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--teal); font-weight: 700; }
+.symbols { display: flex; flex-wrap: wrap; gap: 6px; }
+.symbols span {
+  font-size: 0.88rem; padding: 3px 10px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--bg);
+}
+.symbols b { font-family: var(--mono); }
+.next { margin: 0; color: var(--teal); font-weight: 700; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.92rem; }
+th, td { padding: 4px 12px; border-bottom: 1px solid var(--line); text-align: center; white-space: nowrap; }
+th { color: var(--muted); font-weight: 400; }
+th:first-child, td:first-child { text-align: left; }
+
+.side {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+  width: 52px; height: 52px; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--card); color: var(--fg);
+  font-size: 1.5rem; font-weight: 700; cursor: pointer;
+  box-shadow: 0 6px 18px rgba(20, 23, 43, 0.15);
+}
+.side.left { left: 0; }
+.side.right { right: 0; }
+.side:disabled { opacity: 0.3; cursor: default; }
+button:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
+.dots { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.dots button {
+  font: inherit; font-size: 0.8rem; font-weight: 700; min-height: 32px; min-width: 32px; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--card); color: var(--fg); cursor: pointer; padding: 0;
+}
+.dots button[aria-current="true"] { background: var(--accent); border-color: var(--accent); color: var(--card); }
+.pick { display: flex; align-items: center; gap: 12px; font-weight: 400; }
+.pick input { flex: 1; accent-color: var(--accent); min-height: 32px; }
+.pic { position: relative; }
+.pic canvas { cursor: pointer; }
+.play {
+  position: absolute; left: 10px; bottom: 10px; width: 44px; height: 44px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.6); color: #fff;
+  font-size: 0.95rem; cursor: pointer;
+}
+.play:hover { background: rgba(255,255,255,0.15); }
+.hint-inline { font-size: 0.88rem; color: var(--muted); }
+.hint { font-size: 0.88rem; color: var(--muted); border-left: 2px solid var(--line); padding-left: 10px; }
+.goto { font: inherit; color: var(--teal); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.keys { color: var(--muted); font-size: 0.85rem; text-align: center; margin: 0; }
+
+@media (max-width: 860px) {
+  .card { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  .stage { padding-inline: 0; }
+  .side { top: 140px; width: 44px; height: 44px; opacity: 0.92; }
+  .side.left { left: 6px; }
+  .side.right { right: 6px; }
+}
+.back { margin: 0 0 6px; font-size: 0.9rem; }
+.back a { color: var(--teal); }
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header>
+    <p class="back"><a href="index.html">← Back to Epicycles</a></p>
+    <h1>From a circle to epicycles</h1>
+    <p>How the Epicycles project turns a drawing into circles, in 14 steps.</p>
+  </header>
+
+  <div class="stage">
+    <button class="side left" id="prev" aria-label="Previous card">‹</button>
+    <article class="card" id="card" aria-live="polite"></article>
+    <button class="side right" id="next" aria-label="Next card">›</button>
+  </div>
+  <div class="dots" id="dots"></div>
+  <p class="keys">Keyboard: ← and → to move between cards, space to pause or play.</p>
+</div>
+
+<script>
+window.MathJax = { tex: { inlineMath: [["\\(", "\\)"]] }, svg: { fontCache: "global" }, startup: { typeset: false } };
+</script>
+<script src="lib/tex-svg-full.js" id="MathJax-script"></script>
+<script>
+// ================= the maths behind the pictures (the same as fourier.js in the project) =================
+function resample(points, n) {
+  const loop = [...points, points[0]], lengths = [];
+  let total = 0;
+  for (let i = 1; i < loop.length; i++) {
+    const len = Math.hypot(loop[i][0] - loop[i - 1][0], loop[i][1] - loop[i - 1][1]);
+    lengths.push(len); total += len;
+  }
+  const step = total / n, out = [];
+  let seg = 0, walked = 0;
+  for (let i = 0; i < n; i++) {
+    const target = i * step;
+    while (seg < lengths.length - 1 && walked + lengths[seg] < target) { walked += lengths[seg]; seg++; }
+    const f = lengths[seg] ? (target - walked) / lengths[seg] : 0;
+    out.push([loop[seg][0] + f * (loop[seg + 1][0] - loop[seg][0]), loop[seg][1] + f * (loop[seg + 1][1] - loop[seg][1])]);
+  }
+  return out;
+}
+function dft(points, maxSpeed) {
+  const N = points.length, circles = [];
+  for (let k = -maxSpeed; k <= maxSpeed; k++) {
+    let sumX = 0, sumY = 0;
+    for (let n = 0; n < N; n++) {
+      const [x, y] = points[n], a = 2 * Math.PI * k * n / N;
+      sumX += x * Math.cos(a) + y * Math.sin(a);
+      sumY += y * Math.cos(a) - x * Math.sin(a);
+    }
+    circles.push({ speed: k, radius: Math.hypot(sumX / N, sumY / N), start: Math.atan2(sumY / N, sumX / N) });
+  }
+  return circles;
+}
+function tipAt(circles, p) {          // where the pen is at lap position p (0..1)
+  let x = 0, y = 0;
+  for (const c of circles) { const a = c.start + 2 * Math.PI * c.speed * p; x += c.radius * Math.cos(a); y += c.radius * Math.sin(a); }
+  return [x, y];
+}
+const shapeOf = (circles, steps = 400) => Array.from({ length: steps + 1 }, (_, i) => tipAt(circles, i / steps));
+
+// the heart used on the later cards
+const heartRaw = [];
+for (let i = 0; i < 400; i++) {
+  const s = 2 * Math.PI * i / 400;
+  heartRaw.push([7.5 * 16 * Math.sin(s) ** 3, 7.5 * (13 * Math.cos(s) - 5 * Math.cos(2 * s) - 2 * Math.cos(3 * s) - Math.cos(4 * s)) + 14]);
+}
+const heart128 = resample(heartRaw, 128);
+const heartCircles = dft(heart128, 20);
+const heartSorted = heartCircles.slice().sort((a, b) => (a.speed === 0 ? -1 : b.speed === 0 ? 1 : b.radius - a.radius));
+const heart16 = resample(heartRaw, 16);
+
+// a drawing made of two arrows (speed 1 and speed 3), used to show the unwinding
+const N2 = 24;
+const twoArrows = [{ speed: 1, radius: 110, start: 0 }, { speed: 3, radius: 45, start: 0.6 }];
+const twoDots = Array.from({ length: N2 }, (_, n) => tipAt(twoArrows, n / N2));
+
+// ================= drawing helpers (canvas 640 x 520; maths y points up) =================
+const W = 640, H = 520;
+const C = { ring: "#3a4458", r: "#ff6b8b", x: "#fbbf24", y: "#34d399", z: "#7dd3fc", pen: "#ffffff", text: "#cbd5e1", faint: "#6b7488", star: "#fbbf24" };
+function clear(g) { g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = "#000000"; g.fillRect(0, 0, W, H); g.lineCap = "round"; g.lineJoin = "round"; }
+function seg(g, x0, y0, x1, y1, col, w = 3, dash) { g.setLineDash(dash || []); g.strokeStyle = col; g.lineWidth = w; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); g.setLineDash([]); }
+function arrow(g, x0, y0, x1, y1, col, w = 4) {
+  seg(g, x0, y0, x1, y1, col, w);
+  if (Math.hypot(x1 - x0, y1 - y0) < 8) return;
+  const a = Math.atan2(y1 - y0, x1 - x0), L = Math.min(13, 0.4 * Math.hypot(x1 - x0, y1 - y0));
+  g.fillStyle = col; g.beginPath(); g.moveTo(x1, y1);
+  g.lineTo(x1 - L * Math.cos(a - 0.45), y1 - L * Math.sin(a - 0.45));
+  g.lineTo(x1 - L * Math.cos(a + 0.45), y1 - L * Math.sin(a + 0.45)); g.closePath(); g.fill();
+}
+function ring(g, x, y, r, col = C.ring, w = 2) { g.strokeStyle = col; g.lineWidth = w; g.beginPath(); g.arc(x, y, r, 0, 2 * Math.PI); g.stroke(); }
+function dot(g, x, y, r, col) { g.fillStyle = col; g.beginPath(); g.arc(x, y, r, 0, 2 * Math.PI); g.fill(); }
+function labelParts(g, parts, x, y, size = 18) {   // centred text in several colours
+  g.font = `${size}px "Avenir", "Avenir Next", "Nunito Sans", system-ui, sans-serif`;
+  let px = x - parts.reduce((w, [t]) => w + g.measureText(t).width, 0) / 2;
+  for (const [t, col] of parts) { label(g, t, px, y, col, size, "left"); px += g.measureText(t).width; }
+}
+function label(g, txt, x, y, col = C.text, size = 18, align = "left") { g.fillStyle = col; g.font = `${size}px "Avenir", "Avenir Next", "Nunito Sans", system-ui, sans-serif`; g.textAlign = align; g.fillText(txt, x, y); }
+function angleArc(g, cx, cy, R, theta, col) {
+  const a = ((theta % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+  g.strokeStyle = col; g.lineWidth = 3; g.beginPath(); g.arc(cx, cy, R, 0, -a, true); g.stroke();
+  return a;
+}
+function star(g, x, y, r, col) {
+  g.fillStyle = col; g.beginPath();
+  for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.45 : r; g.lineTo(x + rr * Math.cos(a), y + rr * Math.sin(a)); }
+  g.closePath(); g.fill();
+}
+const P = (cx, cy, x, y) => [cx + x, cy - y];
+function pathLine(g, pts, cx, cy, col, w, upto) {
+  g.strokeStyle = col; g.lineWidth = w; g.beginPath();
+  const n = upto === undefined ? pts.length : upto;
+  for (let i = 0; i < n; i++) { const [sx, sy] = P(cx, cy, pts[i][0], pts[i][1]); i ? g.lineTo(sx, sy) : g.moveTo(sx, sy); }
+  g.stroke();
+}
+function chain(g, circles, p, cx, cy, ringCol, heads) {
+  let x = 0, y = 0;
+  circles.forEach((c, i) => {
+    const a = c.start + 2 * Math.PI * c.speed * p;
+    const nx = x + c.radius * Math.cos(a), ny = y + c.radius * Math.sin(a);
+    const [sx, sy] = P(cx, cy, x, y), [ex, ey] = P(cx, cy, nx, ny);
+    if (c.speed !== 0 && c.radius > 1) ring(g, sx, sy, c.radius, ringCol || C.ring, 1.5);
+    if (heads) arrow(g, sx, sy, ex, ey, i % 2 ? C.z : C.r, 4);
+    else seg(g, sx, sy, ex, ey, i % 2 ? C.z : C.r, 3);
+    x = nx; y = ny;
+  });
+  return P(cx, cy, x, y);
+}
+const turnBack = ([X, Y], a) => [X * Math.cos(a) + Y * Math.sin(a), Y * Math.cos(a) - X * Math.sin(a)];
+
+// ================= one picture per card (sec = seconds since the card was opened) =================
+const ARROW_COLS = ["#a78bfa", "#fb923c", "#e879f9", "#a3e635"];
+const flower = [{ speed: 1, radius: 105, start: 0 }, { speed: -4, radius: 58, start: 0 }, { speed: 6, radius: 36, start: 0 }, { speed: -9, radius: 22, start: 0 }];
+const flowerPath = shapeOf(flower);
+const lapHeart = [{ speed: 1, radius: 110, start: 0 }, { speed: 2, radius: 55, start: 0 }];   // both start along the floor
+const lapHeartPath = shapeOf(lapHeart);
+const PERIOD = 6;
+let pickK = 1;
+document.addEventListener("input", e => {
+  if (e.target.id === "pickK") { pickK = +e.target.value; document.getElementById("kVal").textContent = pickK; }
+});   // seconds per lap on the time card
+
+const DRAW = {
+  // 1. a dot on a circle, with both shadows
+  circle(g, sec) {
+    const cx = 300, cy = 280, U = 45, R = 4 * U, th = 0.55 * sec, wall = 560;   // same centre and scale as card 2
+    label(g, "floor", 44, cy - 10, C.faint, 16);
+    label(g, "wall", wall + 10, 66, C.faint, 16);
+    seg(g, 40, cy, wall, cy, C.ring, 2);                 // the floor line
+    seg(g, wall, 50, wall, H - 30, C.ring, 2);           // the wall
+    ring(g, cx, cy, R);
+    const [x, y] = P(cx, cy, R * Math.cos(th), R * Math.sin(th));
+    seg(g, x, y, x, cy, C.x, 2, [6, 6]);
+    seg(g, x, y, wall, y, C.y, 2, [6, 6]);
+    seg(g, cx, cy, x, cy, C.x, 8);
+    seg(g, wall, cy, wall, y, C.y, 8);
+    seg(g, cx, cy, x, y, C.r, 4);
+    const a = angleArc(g, cx, cy, 40, th, C.pen);
+    label(g, "θ", cx + 62 * Math.cos(a / 2), cy - 62 * Math.sin(a / 2) + 7, C.pen, 24, "center");
+    label(g, "r", (cx + x) / 2 - 18 * Math.sin(th), (cy + y) / 2 - 18 * Math.cos(th) + 7, C.r, 24, "center");
+    dot(g, x, y, 10, C.pen);
+    labelParts(g, [["x = ", C.x], ["r", C.r], ["·cos θ", C.x]], (cx + x) / 2, cy + 36, 20);
+    g.save(); g.translate(wall + 26, (cy + y) / 2); g.rotate(-Math.PI / 2);
+    labelParts(g, [["y = ", C.y], ["r", C.r], ["·sin θ", C.y]], 0, 6, 20); g.restore();
+  },
+  // 2. the complex plane
+  plane(g, sec) {
+    const cx = 300, cy = 280, U = 45, th = Math.PI / 4 + (Math.PI / 4) * Math.sin(0.35 * sec), R = 4;
+    for (let i = -5; i <= 6; i++) { seg(g, cx + i * U, 40, cx + i * U, H - 40, "#161d2b", 1); }
+    for (let j = -4; j <= 4; j++) { seg(g, 20, cy - j * U, W - 20, cy - j * U, "#161d2b", 1); }
+    arrow(g, 30, cy, W - 20, cy, C.faint, 2); arrow(g, cx, H - 30, cx, 30, C.faint, 2);
+    label(g, "real", W - 24, cy + 26, C.x, 18, "right"); label(g, "imaginary (i)", cx + 10, 44, C.y, 18);
+    for (let i = 1; i <= 4; i++) {
+      label(g, String(i), cx + i * U, cy + 20, C.faint, 14, "center");
+      label(g, String(i), cx - 8, cy - i * U + 5, C.faint, 14, "right");
+    }
+    ring(g, cx, cy, R * U, "rgba(125,211,252,0.25)", 1.5);
+    const X = R * Math.cos(th), Y = R * Math.sin(th);
+    const [x, y] = P(cx, cy, X * U, Y * U);
+    seg(g, cx, cy, x, cy, C.x, 6); seg(g, x, cy, x, y, C.y, 6);
+    arrow(g, cx, cy, x, y, C.r, 5);
+    dot(g, x, y, 9, C.z);
+    label(g, `z = ${X.toFixed(2)} + ${Y.toFixed(2)}i`, x + 14, y - 12, C.z, 22);
+    label(g, `x = ${X.toFixed(2)}`, (cx + x) / 2, cy + 40, C.x, 17, "center");
+    label(g, `y = ${Y.toFixed(2)}`, x + 10, (cy + y) / 2 + 6, C.y, 17);
+    label(g, "circle of radius r = 4", cx + R * U * 0.71 + 10, cy + R * U * 0.71 + 18, C.r, 16);
+  },
+  // 3. adding circles
+  sum(g, sec) {
+    const cx = 320, cy = 260, p = (sec / 12) % 1, cols = ARROW_COLS;
+    pathLine(g, flowerPath, cx, cy, "rgba(255,255,255,0.12)", 2);
+    pathLine(g, flowerPath, cx, cy, C.pen, 3, Math.floor(p * 400) + 1);
+    let x = 0, y = 0;
+    flower.forEach((c, i) => {
+      const a = c.start + 2 * Math.PI * c.speed * p;
+      const nx = x + c.radius * Math.cos(a), ny = y + c.radius * Math.sin(a);
+      const [sx, sy] = P(cx, cy, x, y), [ex, ey] = P(cx, cy, nx, ny);
+      ring(g, sx, sy, c.radius, C.ring, 1.5);
+      arrow(g, sx, sy, ex, ey, cols[i], 4);
+      x = nx; y = ny;
+    });
+    const [px, py] = P(cx, cy, x, y);
+    dot(g, px, py, 7, C.pen);
+  },
+  // 4. start angles
+  start(g, sec) {
+    [[170, 0], [470, 100]].forEach(([cx, deg]) => {
+      const cy = 270, R = 120, phi = deg * Math.PI / 180, th = 0.6 * sec + phi;
+      ring(g, cx, cy, R);
+      const [gx, gy] = P(cx, cy, R * Math.cos(phi), R * Math.sin(phi));
+      seg(g, cx, cy, gx, gy, "rgba(255,255,255,0.5)", 2, [4, 6]);
+      label(g, "start", gx + (deg ? -8 : 10), gy - 12, C.faint, 16, deg ? "right" : "left");
+      const [x, y] = P(cx, cy, R * Math.cos(th), R * Math.sin(th));
+      seg(g, cx, cy, x, y, C.r, 4); dot(g, x, y, 9, C.pen);
+      label(g, `φ = ${deg}°`, cx, 450, C.x, 24, "center");
+    });
+    label(g, "same size, same speed, different start", 320, 40, C.text, 19, "center");
+  },
+  // ω: two arrows, one twice as fast
+  omega(g, sec) {
+    const tt = sec % 12;
+    label(g, `t = ${tt.toFixed(1)} s`, 320, 44, C.pen, 24, "center");
+    [[165, 1], [480, 2]].forEach(([cx, m]) => {
+      const cy = 250, R = 115, T = 6 / m, w = 2 * Math.PI / T, th = w * tt;
+      ring(g, cx, cy, R);
+      seg(g, cx, cy, cx + R, cy, "rgba(255,255,255,0.35)", 2, [4, 6]);
+      angleArc(g, cx, cy, 36, th, C.x);
+      const [x, y] = P(cx, cy, R * Math.cos(th), R * Math.sin(th));
+      arrow(g, cx, cy, x, y, C.r, 5); dot(g, x, y, 7, C.pen);
+      label(g, `ω = 2π/${T} = ${w.toFixed(2)} rad/s`, cx, 410, C.x, 18, "center");
+      label(g, `T = ${T} s per turn`, cx, 438, C.text, 17, "center");
+      label(g, `θ = ω·t = ${th.toFixed(2)} rad`, cx, 470, C.pen, 18, "center");
+    });
+    seg(g, 320, 80, 320, 480, C.ring, 1, [4, 6]);
+    label(g, "twice the ω: a full turn takes half the time", 480, 505, C.pen, 16, "center");
+  },
+  // 5. seconds and laps
+  time(g, sec) {
+    const cx = 200, cy = 230, tsec = sec % (PERIOD + 1.5), t = Math.min(tsec, PERIOD), p = t / PERIOD;
+    seg(g, cx - 140, cy, cx + 200, cy, C.ring, 1.5);
+    label(g, "floor", cx - 140, cy - 10, C.faint, 15);
+    pathLine(g, lapHeartPath, cx, cy, "rgba(255,255,255,0.12)", 2);
+    pathLine(g, lapHeartPath, cx, cy, C.pen, 3, Math.floor(p * 400) + 1);
+    const [px, py] = chain(g, lapHeart, p, cx, cy, null, true);
+    dot(g, px, py, 8, C.pen);
+    const tx = 430;
+    label(g, `t = ${t.toFixed(1)} s`, tx, 90, C.pen, 24);
+    label(g, `T = ${PERIOD} s per lap`, tx, 124, C.text, 18);
+    label(g, "base circle: k = 1", tx, 220, C.r, 18);
+    label(g, `θ₁ = 2π·1·t ÷ T`, tx, 246, C.text, 17);
+    label(g, "arrow 2: k = 2", tx, 290, C.z, 18);
+    label(g, `θ₂ = 2π·2·t ÷ T`, tx, 316, C.text, 17);
+    seg(g, 110, 470, 600, 470, C.ring, 8);
+    seg(g, 110, 470, 110 + 490 * p, 470, C.x, 8);
+    label(g, "one lap", 355, 450, C.faint, 15, "center");
+    label(g, `t = 0 s`, 110, 500, C.faint, 15, "center"); label(g, `t = ${PERIOD} s`, 600, 500, C.faint, 15, "right");
+  },
+  // 6. from a picture to arrows
+  puzzle(g, sec) {
+    const cx = 320, cy = 250, n = Math.min(400, Math.floor(sec * 120));
+    pathLine(g, heartRaw, cx, cy, C.pen, 4, n);
+    if (n > 0 && n < 400) { const [x, y] = P(cx, cy, ...heartRaw[n - 1]); dot(g, x, y, 8, C.x); }
+    if (n >= 400) {
+      label(g, "c₋₂ ?   c₋₁ ?   c₀ ?   c₁ ?   c₂ ?   …", cx, 470, C.x, 22, "center");
+      label(g, "which arrows draw this?", cx, 40, C.text, 19, "center");
+    }
+  },
+  // 7. evenly spaced dots = time steps
+  dots(g, sec) {
+    const cx = 300, cy = 240, on = Math.floor(sec * 1.2) % 16;
+    pathLine(g, [...heartRaw, heartRaw[0]], cx, cy, "rgba(255,255,255,0.2)", 2);
+    heart16.forEach(([X, Y], n) => {
+      const [x, y] = P(cx, cy, X, Y);
+      dot(g, x, y, n === on ? 10 : 6, n === on ? C.x : C.z);
+      label(g, String(n), x + 11, y - 9, n === on ? C.x : C.faint, 15);
+    });
+    const [ox, oy] = P(cx, cy, 0, 0); dot(g, ox, oy, 4, C.text); label(g, "(0, 0)", ox + 7, oy + 18, C.faint, 14);
+    label(g, `N = 16 points.   Point n = ${on}:`, 20, 40, C.text, 18);
+    label(g, `t${sub(on)} = ${on} × T ÷ 16 = ${(on * PERIOD / 16).toFixed(2)} s   (T = ${PERIOD} s)`, 20, 68, C.x, 18);
+  },
+  // ride along: normal view vs. view spinning with arrow 1
+  ride(g, sec) {
+    const p = (sec / 8) % 1, S = 0.72;
+    [[165, false], [480, true]].forEach(([cx, spin]) => {
+      const cy = 270, back = spin ? 2 * Math.PI * p : 0;
+      const pts = shapeOf(twoArrows).map(d => turnBack(d, back).map(v => v * S));
+      if (!spin) pathLine(g, pts, cx, cy, "rgba(255,255,255,0.15)", 2);
+      const [a1x, a1y] = turnBack([110 * Math.cos(2 * Math.PI * p), 110 * Math.sin(2 * Math.PI * p)], back);
+      const a2 = 0.6 + 2 * Math.PI * 3 * p, [b2x, b2y] = turnBack([45 * Math.cos(a2), 45 * Math.sin(a2)], back);
+      const [x1, y1] = P(cx, cy, a1x * S, a1y * S), [x2, y2] = P(cx, cy, (a1x + b2x) * S, (a1y + b2y) * S);
+      ring(g, x1, y1, 45 * S, C.ring, 1.5);
+      arrow(g, cx, cy, x1, y1, C.r, 5); arrow(g, x1, y1, x2, y2, C.z, 4); dot(g, x2, y2, 6, C.pen);
+      label(g, spin ? "turned back with k = 1" : "normal view", cx, 60, C.pen, 20, "center");
+      label(g, spin ? "big arrow: frozen" : "both arrows turn", cx, 440, C.x, 18, "center");
+      label(g, spin ? "small arrow: still turns" : "", cx, 466, C.z, 18, "center");
+    });
+    seg(g, 320, 90, 320, 420, C.ring, 1, [4, 6]);
+  },
+  // averaging: a spinning arrow vs. a frozen arrow
+  zero(g, sec) {
+    const N = 12, shown = Math.min(N, Math.floor(sec * 2.5) % (N + 6) + 1);
+    [[165, true], [480, false]].forEach(([cx, spinning]) => {
+      const cy = 260, R = 110, start = 0.5;
+      let sx = 0, sy = 0;
+      for (let n = 0; n < shown; n++) {
+        const a = spinning ? start + 2 * Math.PI * n / N : start;
+        const X = R * Math.cos(a), Y = R * Math.sin(a); sx += X; sy += Y;
+        const [x, y] = P(cx, cy, X, Y);
+        arrow(g, cx, cy, x, y, n === shown - 1 ? C.r : "rgba(255,107,139,0.35)", 3);
+      }
+      const [ax, ay] = P(cx, cy, sx / shown, sy / shown);
+      star(g, ax, ay, 13, C.star);
+      label(g, spinning ? "turning arrow" : "frozen arrow", cx, 60, C.pen, 20, "center");
+      label(g, `steps: ${shown} of ${N}`, cx, 420, C.faint, 16, "center");
+      label(g, `average (★) length: ${(Math.hypot(sx, sy) / shown).toFixed(0)}`, cx, 450, C.x, 18, "center");
+    });
+    seg(g, 320, 90, 320, 420, C.ring, 1, [4, 6]);
+  },
+  // pick a speed with the slider
+  pick(g) {
+    const k = pickK, cx = 320, cy = 250;
+    seg(g, 60, cy, 580, cy, C.ring, 1, [6, 8]); seg(g, cx, 60, cx, 440, C.ring, 1, [6, 8]);
+    let sx = 0, sy = 0;
+    twoDots.forEach((d, n) => {
+      const [ux, uy] = turnBack(d, 2 * Math.PI * k * n / N2); sx += ux; sy += uy;
+      const [x, y] = P(cx, cy, ux, uy); dot(g, x, y, 5, C.z);
+    });
+    const len = Math.hypot(sx, sy) / N2, [ax, ay] = P(cx, cy, sx / N2, sy / N2);
+    if (len > 2) arrow(g, cx, cy, ax, ay, C.star, 5);
+    star(g, ax, ay, 13, C.star);
+    label(g, `turned back with k = ${k}`, 20, 40, C.pen, 20);
+    label(g, len > 2 ? `★ average: a circle of radius ${len.toFixed(0)}` : "★ average ≈ 0: no circle with this k", 20, 480, C.x, 19);
+  },
+  // c_k as an arrow: length r_k, direction φ_k; the circle it draws
+  polar(g, sec) {
+    const cx = 300, cy = 270, R = 160, phi = 0.7, th = phi + 0.5 * sec;
+    seg(g, 60, cy, 560, cy, C.ring, 1.5); label(g, "floor", 64, cy - 10, C.faint, 15);
+    ring(g, cx, cy, R);
+    const [sx, sy] = P(cx, cy, R * Math.cos(phi), R * Math.sin(phi));
+    seg(g, cx, cy, sx, sy, "rgba(255,255,255,0.45)", 2, [6, 6]);
+    label(g, "cₖ (at the start)", sx + 10, sy - 8, C.text, 16);
+    const a = angleArc(g, cx, cy, 46, phi, C.pen);
+    label(g, "φₖ", cx + 70 * Math.cos(a / 2), cy - 70 * Math.sin(a / 2) + 6, C.pen, 20, "center");
+    const [x, y] = P(cx, cy, R * Math.cos(th), R * Math.sin(th));
+    arrow(g, cx, cy, x, y, C.r, 5); dot(g, x, y, 8, C.z);
+    label(g, "rₖ", (cx + x) / 2 - 18 * Math.sin(th), (cy + y) / 2 - 18 * Math.cos(th) + 7, C.r, 22, "center");
+    label(g, "the arrow turns k times per lap, starting at cₖ", 300, 490, C.text, 16, "center");
+  },
+  // 8. the formula: unwinding
+  unwind(g, sec) {
+    const cx = 260, cy = 260, cyc = 6, q = (sec % cyc) / cyc;
+    const s = q < 0.45 ? q / 0.45 : q < 0.8 ? 1 : 1 - (q - 0.8) / 0.2;
+    seg(g, 40, cy, 470, cy, C.ring, 1, [6, 8]);
+    pathLine(g, [...twoDots, twoDots[0]], cx, cy, "rgba(255,255,255,0.12)", 2);
+    let sx = 0, sy = 0;
+    twoDots.forEach((d, n) => {
+      const [ux, uy] = turnBack(d, s * 2 * Math.PI * 1 * n / N2);
+      sx += ux; sy += uy;
+      const [x, y] = P(cx, cy, ux, uy); dot(g, x, y, 5, C.z);
+    });
+    if (s > 0.98) { const [ax, ay] = P(cx, cy, sx / N2, sy / N2); arrow(g, cx, cy, ax, ay, C.star, 4); star(g, ax, ay, 13, C.star); label(g, "average = c₁", ax, ay + 34, C.x, 17, "center"); }
+    label(g, "k = 1: turn point n back", 20, 40, C.text, 19);
+    label(g, "by 2π·1·n ÷ N", 20, 66, C.text, 19);
+    label(g, `turned back: ${(s * 100).toFixed(0)}%`, 20, 98, C.x, 17);
+    label(g, "this drawing = a big arrow (k = 1)", 620, 40, C.faint, 16, "right");
+    label(g, "+ a small arrow (k = 3)", 620, 64, C.faint, 16, "right");
+  },
+  // 9. why it works
+  cancel(g, sec) {
+    [[165, 1], [480, 2]].forEach(([cx, k]) => {
+      const cy = 260;
+      seg(g, cx - 140, cy, cx + 140, cy, C.ring, 1, [6, 8]);
+      let sx = 0, sy = 0;
+      twoDots.forEach((d, n) => {
+        const [ux, uy] = turnBack(d, 2 * Math.PI * k * n / N2);
+        sx += ux; sy += uy;
+        const [x, y] = P(cx, cy, ux * 0.72, uy * 0.72); dot(g, x, y, 4.5, C.z);
+      });
+      const [ax, ay] = P(cx, cy, 0.72 * sx / N2, 0.72 * sy / N2);
+      if (Math.hypot(sx, sy) / N2 > 2) arrow(g, cx, cy, ax, ay, C.star, 5);
+      star(g, ax, ay, 12, C.star);
+      label(g, `unwound at k = ${k}`, cx, 50, C.pen, 21, "center");
+      label(g, k === 1 ? "average = c₁ (big)" : "average = c₂ ≈ 0", cx, 450, C.x, 19, "center");
+    });
+  },
+  // 10. four dots by hand
+  four(g, sec) {
+    const cx = 320, cy = 270, U = 75, q = (sec % 5) / 5, s = Math.min(1, q / 0.6);
+    const pts = [[2, 0], [0, 2], [-2, 0], [0, -2]];
+    seg(g, cx - 230, cy, cx + 230, cy, C.ring, 1, [6, 8]); seg(g, cx, cy - 190, cx, cy + 190, C.ring, 1, [6, 8]);
+    ring(g, cx, cy, 2 * U);
+    pts.forEach(([X, Y], n) => {
+      const [x0, y0] = P(cx, cy, X * U, Y * U);
+      dot(g, x0, y0, 5, "rgba(255,255,255,0.3)");
+      label(g, `z${sub(n)}`, x0 + (X < 0 ? -12 : 12), y0 + (Y > 0 ? -12 : 26), C.faint, 17, X < 0 ? "right" : "left");
+      const [ux, uy] = turnBack([X, Y], s * n * Math.PI / 2);
+      const [x, y] = P(cx, cy, ux * U, uy * U);
+      dot(g, x, y, 9, C.z);
+    });
+    label(g, "k = 1: turn zₙ back by n × 90°", 20, 40, C.text, 19);
+    if (s >= 1) { const [x, y] = P(cx, cy, 2 * U, 0); star(g, x, y, 15, C.star); label(g, "all at 2 → average c₁ = 2", x - 30, y + 46, C.x, 18, "center"); }
+  },
+  // 11. the result for every k (computed by dft on the heart)
+  spectrum(g, sec) {
+    const list = heartCircles.filter(c => c.speed !== 0), max = Math.max(...list.map(c => c.radius));
+    const x0 = 40, x1 = 600, base = 420, top = 80, slot = (x1 - x0) / 41;
+    seg(g, x0, base, x1, base, C.ring, 2);
+    const grow = Math.min(1, sec / 1.5);
+    list.forEach(c => {
+      const h = grow * (base - top) * c.radius / max, x = x0 + (c.speed + 20) * slot;
+      g.fillStyle = c.radius / max > 0.05 ? C.x : C.faint;
+      g.fillRect(x + slot * 0.18, base - h, slot * 0.64, Math.max(1, h));
+    });
+    label(g, "−20", x0, 448, C.faint, 15, "center"); label(g, "0", x0 + 20 * slot + slot / 2, 448, C.faint, 15, "center"); label(g, "+20", x1, 448, C.faint, 15, "center");
+    label(g, "k (turns per lap)", 320, 478, C.faint, 15, "center");
+    label(g, "r_k = |c_k| for the heart, k = −20 … 20", 20, 40, C.text, 19);
+  },
+  // 12. epicycles
+  epicycles(g, sec) {
+    const cx = 320, cy = 245, p = (sec / 10) % 1, use = heartSorted.slice(0, 31);
+    const path = shapeOf(use);
+    pathLine(g, [...heart128, heart128[0]], cx, cy, "rgba(255,255,255,0.12)", 2);
+    pathLine(g, path, cx, cy, C.pen, 3, Math.floor(p * 400) + 1);
+    const [px, py] = chain(g, use, p, cx, cy, "rgba(125,211,252,0.25)");
+    dot(g, px, py, 8, C.x);
+    label(g, "the 30 biggest circles redraw the heart", 20, 40, C.text, 19);
+  },
+};
+function sub(n) { return String(n).split("").map(d => "₀₁₂₃₄₅₆₇₈₉"[d]).join(""); }
+
+// ================= the cards =================
+const deg = rad => ((rad * 180 / Math.PI) % 360 + 360) % 360;
+const topRows = heartSorted.filter(c => c.speed !== 0).slice(0, 6).map(c =>
+  `<tr><td>${c.speed > 0 ? "+" : ""}${c.speed}</td><td>${c.radius.toFixed(1)}</td><td>${deg(c.start).toFixed(0)}°</td></tr>`).join("");
+
+const R = String.raw;
+const CARDS = [
+  { draw: "circle", title: "A point on a circle",
+    body: R`<p>The point can be denoted by:</p>
+      <ul><li>the <b>radius</b> \({\color[RGB]{255,107,139}r}\) (how far from the centre)</li><li>the <b>angle</b> \(\theta\) (which direction from the floor)</li></ul>
+      <p>Its projection on the floor is \({\color[RGB]{251,191,36}x}\), its projection on the wall is \({\color[RGB]{52,211,153}y}\).</p>`,
+    formula: R`\[ {\color[RGB]{251,191,36}x = {\color[RGB]{255,107,139}r}\cos\theta}, \qquad {\color[RGB]{52,211,153}y = {\color[RGB]{255,107,139}r}\sin\theta} \]` },
+
+  { draw: "plane", title: "The complex plane",
+    body: R`<p>The floor and the wall now become the two axes of a <b>complex plane</b>.</p>
+      <p>Let \({\color[RGB]{125,211,252}z} = {\color[RGB]{251,191,36}x} + i{\color[RGB]{52,211,153}y}\).</p>`,
+    formula: R`\[ {\color[RGB]{125,211,252}z} = {\color[RGB]{251,191,36}x} + i\,{\color[RGB]{52,211,153}y} = {\color[RGB]{255,107,139}r}{\color[RGB]{251,191,36}\cos\theta} + i\,{\color[RGB]{255,107,139}r}{\color[RGB]{52,211,153}\sin\theta} = {\color[RGB]{255,107,139}r}e^{i\theta} \]`,
+    after: R`<p>Using Euler's formula, \(e^{i\theta} = \cos\theta + i\sin\theta\), we can set \({\color[RGB]{125,211,252}z} = {\color[RGB]{255,107,139}r}e^{i\theta}\): an arrow of length \({\color[RGB]{255,107,139}r}\) at angle \(\theta\). Turning by \(a\) means multiplying by \(e^{ia}\).</p>` },
+
+  { draw: "sum", title: "Going beyond a single circle",
+    body: R`<p>For more circles, <b>add</b> arrows tip to tail. The last tip holds the pen.</p>
+      <p>A circle riding on a circle is an <b>epicycle</b>.</p>
+      <p>\(z_k\) is the \(k\)-th circle's arrow.</p>`,
+    formula: R`\[ z = {\color[RGB]{167,139,250}z_1} + {\color[RGB]{251,146,60}z_2} + {\color[RGB]{232,121,249}z_3} + {\color[RGB]{163,230,53}z_4} = \sum_k z_k \]`,
+    after: R`<p>The arrows turn, so \(z\) is a function of time:</p>
+      <div class="formula">\[ z(t) = \sum_k z_k(t) \]</div>` },
+
+  { draw: "omega", title: "How fast the point revolves",
+    body: R`<p>\(\omega\) is the <b>angle an arrow turns per second</b>, in radians per second.</p>
+      <p>After \(t\) seconds it has turned \(\theta = \omega t\).</p>
+      <p>If one full turn (\(2\pi\) radians) takes \(T\) seconds, then \(\omega = 2\pi / T\).</p>`,
+    formula: R`\[ \theta = \omega\, t = \frac{2\pi t}{T}, \quad \text{where } \omega = \frac{2\pi}{T} \]` },
+
+  { draw: "time", title: "Each circle's turns per lap",
+    body: R`<p>We label each circle by \(k\), the <b>number of whole turns it makes per lap</b>. So every arrow is back where it began at the start of the lap.</p>
+      <p>\(\theta_k\) is how far circle \(k\)'s arrow has turned so far: the \(\theta\) of card 1, now for circle \(k\).</p>`,
+    formula: R`\[ \theta_k = \omega_k\, t = \frac{2\pi k\, t}{T}, \quad \text{where } \omega_k = \frac{2\pi k}{T} \]`,
+    after: R`<p>When \(k = 1\), it turns exactly once per lap: the <b>base circle</b> (\(k = -1\) turns once the other way).</p>` },
+
+  { draw: "puzzle", title: "From a drawing to epicycles",
+    body: R`<p>On <button class="goto" data-card="3">card 3</button>, \(z(t) = \sum_k z_k(t)\): each arrow \(z_k(t)\) is a <b>function of time</b>.</p>
+      <p>Let \(c_k\) be arrow \(k\) at the start of the lap: one per circle. <span class="hint-inline">(hint: \(c_k\) is not just the radius \(r_k\))</span></p>
+      <p>As time runs, arrow \(k\) is \(c_k\) turned by \(\theta_k\). Over one lap, the pen traces the drawing:</p>`,
+    formula: R`\[ \begin{gathered} z(t) = \sum_k c_k\, e^{i 2\pi k t / T} \\[10pt] \text{where} \quad z_k(t) = c_k\, e^{i 2\pi k t / T}, \quad c_k = z_k(0) \end{gathered} \]`,
+    after: R`<p>The puzzle: given the drawing, find every \(c_k\). Welcome to the job of the <b>Discrete Fourier Transform (DFT)</b>!</p>` },
+
+  { draw: "dots", title: "Evenly spaced points",
+    body: R`<p>Take \(N\) points, evenly spaced along the line. Point \(n\) is one <b>time step</b>, \(n = 0, 1, \dots, N-1\).</p>
+      <p>\({\color[RGB]{251,191,36}t_n}\) is the moment the pen reaches point \(n\); \({\color[RGB]{125,211,252}z_n}\) is where the pen is then.</p>`,
+    formula: R`\[ \begin{gathered} {\color[RGB]{251,191,36}t_n} = \frac{n\,T}{N}, \qquad {\color[RGB]{125,211,252}z_n} = z({\color[RGB]{251,191,36}t_n}) = x_n + i\,y_n \\[10pt] \text{where } T \text{ is the lap time} \end{gathered} \]`,
+    after: R`<p>Previously \(z(t)\) was <b>continuous</b> in time. Now it becomes <b>discrete</b>: a list \({\color[RGB]{125,211,252}z_n}\), one value per time step. That is the D in DFT.</p>` },
+
+  { draw: "ride", title: "Turn everything back",
+    body: R`<p>From card 6, the drawing is \(z(t) = \sum_j c_j\, e^{i 2\pi j t / T}\), where \(j\) runs over all the arrows.</p>
+      <p>To find one \(c_k\), turn the whole drawing <b>back</b> by arrow \(k\)'s angle \(2\pi k t / T\). Turning back means multiplying by \(e^{-i 2\pi k t / T}\) (card 2, but backwards):</p>`,
+    formula: R`\[ z(t)\, e^{-i 2\pi k t / T} = c_k + \sum_{j \neq k} c_j\, e^{i 2\pi (j-k) t / T} \]`,
+    after: R`<p>Arrow \(k\) is now <b>frozen</b> at \(c_k\). Every other arrow \(j\) still <b>turns</b>, \(j - k\) times per lap.</p>
+      <p class="hint-inline">In the picture: arrows with \(k = 1\) (big) and \(k = 3\) (small), turned back with \(k = 1\).</p>` },
+
+  { draw: "zero", title: "Turning arrows average to zero",
+    body: R`<p>Now take the <b>average over one lap</b>.</p>
+      <p>A turning arrow points every way equally, so its average is <b>0</b>. The frozen arrow is the same all lap, so its average is <b>itself</b>.</p>`,
+    formula: R`\[ \text{average over the lap of } z(t)\, e^{-i 2\pi k t / T} = c_k \]`,
+    after: R`<p>Everything except \(c_k\) cancels out.</p>` },
+
+  { draw: "unwind", title: "With points: the DFT",
+    body: R`<p>We only have the points \({\color[RGB]{125,211,252}z_n}\) at the times \({\color[RGB]{251,191,36}t_n}\) (card 7). There, the turn-back angle is</p>`,
+    formula: R`\[ \frac{2\pi k\, {\color[RGB]{251,191,36}t_n}}{T} = \frac{2\pi k n}{N} \]`,
+    after: R`<p>Turn each point back, add them up and divide by \(N\): the average over the points.</p>
+      <div class="formula">\[ c_k = \frac{1}{N} \sum_{n=0}^{N-1} {\color[RGB]{125,211,252}z_n}\, e^{-i 2\pi k n / N} \]</div>
+      <p>This is the <b>DFT</b>.</p>` },
+
+  { draw: "pick", title: "Try every k",
+    body: R`<p>Pick \(k\), turn the points back and average them (★). Only arrows that are really in the drawing survive.</p>`,
+    after: R`<label class="pick">\(k\): <b id="kVal">1</b>
+        <input type="range" id="pickK" min="-3" max="5" step="1" value="1"></label>
+      <p>Only \(k = 1\) and \(k = 3\) leave an arrow: exactly the two circles in the drawing.</p>` },
+
+  { draw: "four", title: "By hand: 4 points",
+    body: R`<p>Points: \(z_0 = 2,\; z_1 = 2i,\; z_2 = -2,\; z_3 = -2i\). Here \(N = 4\), so point \(n\) is turned back by \(n \cdot 90°\) for \(k = 1\).</p>`,
+    table: R`<table>
+      <thead><tr><th>\(k\)</th><th>turned-back points</th><th>\(c_k\)</th></tr></thead>
+      <tbody>
+        <tr><td>\(1\)</td><td>\(2,\ 2,\ 2,\ 2\)</td><td>\(\mathbf{2}\)</td></tr>
+        <tr><td>\(2\)</td><td>\(2,\ -2i,\ -2,\ 2i\)</td><td>\(0\)</td></tr>
+        <tr><td>\(0\)</td><td>\(2,\ 2i,\ -2,\ -2i\)</td><td>\(0\)</td></tr>
+        <tr><td>\(-1\)</td><td>\(2,\ -2,\ 2,\ -2\)</td><td>\(0\)</td></tr>
+      </tbody></table>`,
+    after: R`<p>Only \(c_1 = 2\) survives: one circle of radius 2, once per lap, pointing right when the lap begins.</p>` },
+
+  { draw: "polar", title: "From \\(c_k\\) to a circle",
+    body: R`<p>\(c_k\) is an arrow, just like \(z = re^{i\theta}\) on card 2.</p>
+      <ul><li>its <b>length</b> is the radius \({\color[RGB]{255,107,139}r_k}\)</li>
+        <li>its <b>direction</b> is the <b>start angle</b> \(\varphi_k\): where circle \(k\) points when the lap begins</li></ul>`,
+    formula: R`\[ c_k = {\color[RGB]{255,107,139}r_k}\, e^{i\varphi_k}, \quad \text{where } {\color[RGB]{255,107,139}r_k} = |c_k|, \ \varphi_k = \arg c_k \]`,
+    after: R`<p>So each circle is three numbers: radius \({\color[RGB]{255,107,139}r_k}\), turns per lap \(k\), start angle \(\varphi_k\).</p>` },
+
+  { draw: "epicycles", title: "The epicycles",
+    body: R`<p>The DFT of the heart gives one circle per \(k\). The biggest ones:</p>`,
+    table: R`<table><thead><tr><th>\(k\)</th><th>\(r_k\)</th><th>\(\varphi_k\)</th></tr></thead><tbody>${topRows}</tbody></table>`,
+    formula: R`\[ z(t) = \sum_k r_k\, e^{i(2\pi k t / T + \varphi_k)} \]`,
+    after: R`<p>Chain them biggest first and run \(t\) from 0 to \(T\): the heart comes back. A few big circles carry the shape; small ones add detail.</p>` },
+
+];
+
+// ================= the card viewer =================
+let index = 0, direction = 1, elapsed = 0, last = null, paused = false;
+function setPaused(v) {
+  paused = v;
+  const b = document.getElementById("play");
+  if (b) { b.textContent = paused ? "▶" : "❚❚"; b.setAttribute("aria-label", paused ? "Play animation" : "Pause animation"); }
+}
+document.addEventListener("click", e => {
+  if (e.target.id === "play" || e.target === canvas) setPaused(!paused);
+  if (e.target.classList && e.target.classList.contains("goto")) go(+e.target.dataset.card - 1);
+});
+const canvas = document.createElement("canvas");
+canvas.width = W; canvas.height = H;
+canvas.setAttribute("role", "img");
+const g = canvas.getContext("2d");
+const cardEl = document.getElementById("card");
+
+function cardHTML(c) {
+  return `
+    <div class="pic"><button class="play" id="play" aria-label="Pause animation">❚❚</button></div>
+    <div class="words">
+      <h2>${c.title}</h2>
+      ${c.body}
+      ${c.formula ? `<div class="formula">${c.formula}</div>` : ""}
+      ${c.table ? `<div class="table-wrap">${c.table}</div>` : ""}
+      ${c.after || ""}
+    </div>`;
+}
+function render() {
+  const c = CARDS[index];
+  const builds = index === 0 ? "the first step" : `builds on card ${index}`;
+  const symbols = (c.symbols || []).map(([s, d]) => `<span><b>${s}</b> ${d}</span>`).join("");
+  cardEl.innerHTML = cardHTML(c);
+  canvas.setAttribute("aria-label", c.title);
+  typeset();
+  cardEl.querySelector(".pic").appendChild(canvas);
+  cardEl.style.setProperty("--from", direction > 0 ? "24px" : "-24px");
+  cardEl.classList.remove("enter"); void cardEl.offsetWidth; cardEl.classList.add("enter");
+  document.getElementById("prev").disabled = index === 0;
+  document.getElementById("next").disabled = index === CARDS.length - 1;
+  document.querySelectorAll("#dots button").forEach((b, i) => b.setAttribute("aria-current", i === index));
+}
+let mjChain = Promise.resolve();   // MathJax jobs must run one after another
+function mathjax(job) {
+  const mj = window.MathJax;
+  if (!(mj && mj.typesetPromise)) return new Promise(r => setTimeout(r, 150)).then(() => mathjax(job));
+  return (mjChain = mjChain.then(() => job(mj)).catch(() => {}));
+}
+function typeset() { mathjax(mj => mj.typesetPromise([cardEl])); }
+
+// every card gets the height of the tallest one, so the card never changes size
+async function equalHeights() {
+  const probe = cardEl.cloneNode(false);
+  probe.removeAttribute("id"); probe.removeAttribute("aria-live"); probe.classList.remove("enter");
+  probe.setAttribute("aria-hidden", "true");
+  probe.style.cssText = `position:absolute;visibility:hidden;pointer-events:none;left:0;top:0;min-height:0;width:${cardEl.getBoundingClientRect().width}px`;
+  cardEl.parentNode.appendChild(probe);
+  let max = 0;
+  for (const c of CARDS) {
+    await mathjax(mj => { mj.typesetClear([probe]); });
+    probe.innerHTML = cardHTML(c).replace(/ id="[^"]*"/g, "");
+    const blank = document.createElement("canvas"); blank.width = W; blank.height = H;
+    probe.querySelector(".pic").appendChild(blank);
+    await mathjax(mj => mj.typesetPromise([probe]));
+    max = Math.max(max, probe.offsetHeight);
+  }
+  await mathjax(mj => { mj.typesetClear([probe]); });
+  probe.remove();
+  cardEl.style.minHeight = max + "px";
+}
+let resizeTimer;
+window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(equalHeights, 300); });
+function go(i) {
+  if (i < 0 || i >= CARDS.length || i === index) return;
+  direction = i > index ? 1 : -1;
+  index = i; elapsed = 0; render(); setPaused(paused);
+}
+const dotsEl = document.getElementById("dots");
+CARDS.forEach((c, i) => {
+  const b = document.createElement("button");
+  b.textContent = i + 1; b.setAttribute("aria-label", `Card ${i + 1}: ${c.title}`);
+  b.addEventListener("click", () => go(i));
+  dotsEl.appendChild(b);
+});
+document.getElementById("prev").addEventListener("click", () => go(index - 1));
+document.getElementById("next").addEventListener("click", () => go(index + 1));
+document.addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT") return;   // let the slider use the arrow keys
+  if (e.key === " ") { e.preventDefault(); setPaused(!paused); }
+  if (e.key === "ArrowRight") go(index + 1);
+  if (e.key === "ArrowLeft") go(index - 1);
+});
+
+const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function loop(now) {
+  clear(g);
+  if (last !== null && !paused) elapsed += Math.min(0.1, (now - last) / 1000);
+  last = now;
+  DRAW[CARDS[index].draw](g, still ? 4 : elapsed);
+  requestAnimationFrame(loop);
+}
+render();
+equalHeights();
+requestAnimationFrame(loop);
+</script>
+
+</body>
+</html>
