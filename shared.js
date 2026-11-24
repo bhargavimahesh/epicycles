@@ -19,7 +19,7 @@ function strokeLine(ctx, points, from, to, colour, width) {
 
 // Draw one moment of the circles on a black square canvas.
 // opts: zoom (1 = no zoom), ghost (your original line, drawn faintly), empty (text when no circles),
-//       dots (points to mark, e.g. kolam dots), colour (colour of the line the pen draws, white if not given)
+//       dots (points to mark, e.g. rangoli dots), colour (colour of the line the pen draws, white if not given)
 function drawScene(ctx, circles, path, lap, opts = {}) {
   const size = ctx.canvas.width;
   const centre = size / 2;

@@ -36,7 +36,6 @@ a { color: var(--accent); }
 }
 h1 { margin: 0; font-size: 2rem; letter-spacing: 0.01em; }
 .tagline { margin: 4px 0 0; color: var(--muted); max-width: 60ch; }
-.name-meaning { margin: 2px 0 0; color: var(--accent); font-size: 0.9rem; letter-spacing: 0.02em; }
 
 .tabs { display: flex; flex-wrap: wrap; gap: 6px; }
 .tabs button[aria-selected="true"] {
@@ -230,7 +229,7 @@ footer { max-width: 1400px; margin: 0 auto; padding: 16px; color: var(--muted); 
   h1 { font-size: 1.6rem; }
 }
 
-/* ---------- kolam page ---------- */
+/* ---------- rangoli page ---------- */
 .seg { display: inline-flex; flex-wrap: wrap; }
 .seg button { border-radius: 0; margin-left: -1px; }
 .seg button:first-child { border-radius: 8px 0 0 8px; margin-left: 0; }

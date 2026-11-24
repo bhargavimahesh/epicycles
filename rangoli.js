@@ -1,6 +1,6 @@
-// ================= kolam.js: one closed line around a grid of dots =================
+// ================= rangoli.js: one closed line around a grid of dots =================
 //
-// How a kolam is made here, in "doubled" coordinates:
+// How a rangoli is made here, in "doubled" coordinates:
 // for a grid of m x m dots, dot (i, j) sits at (2i + 1, 2j + 1).
 // The line only ever travels diagonally, from one halfway point between two dots to the next
 // (a halfway point has exactly one even coordinate).
@@ -10,9 +10,9 @@
 //   wall 2 lies along the line joining the two dots.
 // The border of the grid always bounces the line back in.
 // We place turning points at random (keeping the symmetry) and then change them
-// until the whole pattern is ONE closed line: that is what makes it a kolam.
+// until the whole pattern is ONE closed line: that is what makes it a rangoli.
 
-const kCanvas = $("kolamCanvas");
+const kCanvas = $("rangoliCanvas");
 const kCtx = kCanvas.getContext("2d");
 const K_SIZE = kCanvas.width;
 const K_CENTRE = K_SIZE / 2;
@@ -26,8 +26,8 @@ let view = "line";
 let lineColour = "#ffffff";
 
 let grid = null;        // { m, L, walls }: the dots and turning points
-let kolam = null;       // what we draw: { path, dots, walls, dotRadius } in maths coordinates
-let kAllCircles = [];   // circles found by Fourier for this kolam (computed when needed)
+let rangoli = null;       // what we draw: { path, dots, walls, dotRadius } in maths coordinates
+let kAllCircles = [];   // circles found by Fourier for this rangoli (computed when needed)
 let kCircles = [];
 let kCirclePath = [];
 
@@ -153,7 +153,7 @@ function smooth(points) {
   return out;
 }
 
-function buildKolam() {
+function buildRangoli() {
   const m = grid.m;
   const diamond = shape === "diamond";
   const s = diamond ? 440 / (m * Math.SQRT2) : 440 / m;     // size of one step, so it fits the canvas
@@ -182,16 +182,16 @@ function buildKolam() {
     }
   }
 
-  kolam = { path: resample(line, 2400), dots: dots, walls: walls, dotRadius: Math.max(5, s * 0.14) };
-  kolam.path.push(kolam.path[0]);                           // close the loop for drawing
+  rangoli = { path: resample(line, 2400), dots: dots, walls: walls, dotRadius: Math.max(5, s * 0.14) };
+  rangoli.path.push(rangoli.path[0]);                           // close the loop for drawing
   findCrossings(s, toMaths);
-  // Fourier: the circles that draw this kolam (also used for the recipe chart)
-  kAllCircles = sortCircles(dft(resample(kolam.path.slice(0, -1), 1024), 300));
-  useKolamCircles();
-  drawKolamRecipe();
+  // Fourier: the circles that draw this rangoli (also used for the recipe chart)
+  kAllCircles = sortCircles(dft(resample(rangoli.path.slice(0, -1), 1024), 300));
+  useRangoliCircles();
+  drawRangoliRecipe();
 }
 
-// With an even number of dots per side, a one-line kolam can only be mirrored once
+// With an even number of dots per side, a one-line rangoli can only be mirrored once
 // (turning 4 ways or mirroring both ways always splits it into several lines).
 function updateSymmetryButtons(m) {
   const even = m % 2 === 0;
@@ -204,19 +204,19 @@ function updateSymmetryButtons(m) {
   $("kEvenNote").hidden = !even;
 }
 
-function newKolam() {
+function newRangoli() {
   const m = Number($("kDots").value);
   updateSymmetryButtons(m);
   grid = makeGrid(m);
   if (!grid) {
-    $("kStatus").textContent = "Couldn't find a one-line kolam with this symmetry. Try again or pick another.";
+    $("kStatus").textContent = "Couldn't find a one-line rangoli with this symmetry. Try again or pick another.";
     return;
   }
   $("kStatus").textContent = "";
   kTransport.lap = 0;
   kTransport.setPlaying(true);
-  buildKolam();
-  $("kInfo").textContent = `${m} × ${m} = ${m * m} dots, one line, ${kolam.crossings} crossings`;
+  buildRangoli();
+  $("kInfo").textContent = `${m} × ${m} = ${m * m} dots, one line, ${rangoli.crossings} crossings`;
 }
 
 // ---------- crossings: over and under ----------
@@ -225,7 +225,7 @@ function newKolam() {
 // (For any closed line drawn on paper this gives each crossing one "over" and one "under".)
 function findCrossings(s, toMaths) {
   const m = grid.m;
-  const path = kolam.path;
+  const path = rangoli.path;
   const spacing = Math.hypot(path[1][0] - path[0][0], path[1][1] - path[0][1]);
   const near = 0.35 * s;                                   // how close counts as "passing through"
   const visits = [];                                       // { index along the line, crossing number }
@@ -251,27 +251,27 @@ function findCrossings(s, toMaths) {
     pairs[v.crossing] = pairs[v.crossing] || {};
     if (k % 2 === 0) pairs[v.crossing].over = v.index; else pairs[v.crossing].under = v.index;
   });
-  kolam.knots = pairs.filter(p => p.over !== undefined && p.under !== undefined);
-  kolam.gapHalf = Math.ceil(0.3 * s / spacing);            // half the length of the gap in the lower line
-  kolam.overHalf = Math.ceil(0.55 * s / spacing);          // half the length of the upper line we redraw
-  kolam.crossings = crossingCount;
+  rangoli.knots = pairs.filter(p => p.over !== undefined && p.under !== undefined);
+  rangoli.gapHalf = Math.ceil(0.3 * s / spacing);            // half the length of the gap in the lower line
+  rangoli.overHalf = Math.ceil(0.55 * s / spacing);          // half the length of the upper line we redraw
+  rangoli.crossings = crossingCount;
 }
 
 // ---------- spinning circles ----------
 function prepareCircles() {
-  if (kAllCircles.length > 0) useKolamCircles();
+  if (kAllCircles.length > 0) useRangoliCircles();
 }
 
-function useKolamCircles() {
+function useRangoliCircles() {
   const count = Number($("kCount").value);
   $("kCountOut").textContent = count;
   kCircles = kAllCircles.slice(0, count + 1);
   kCirclePath = pathOf(kCircles, 2400);
 }
 
-// ---------- the recipe: which speeds does this kolam use? ----------
+// ---------- the recipe: which speeds does this rangoli use? ----------
 // Speeds are grouped by their remainder when divided by 4.
-// A kolam that looks the same after a quarter turn uses only ONE group (1, 5, 9, −3, …),
+// A rangoli that looks the same after a quarter turn uses only ONE group (1, 5, 9, −3, …),
 // one that looks the same after a half turn uses only the odd groups.
 const GROUP_COLOURS = ["#4cc9f0", "#ffd23f", "#ff4d6d", "#3ddc97"];
 const GROUP_NAMES = ["0, 4, 8, −4 …", "1, 5, 9, −3 …", "2, 6, 10, −2 …", "3, 7, 11, −1 …"];
@@ -290,7 +290,7 @@ function groupShares() {
   return share.map(s => s / total);
 }
 
-function drawKolamRecipe() {
+function drawRangoliRecipe() {
   const canvas = $("kSpectrum");
   const dpr = window.devicePixelRatio || 1;
   const w = canvas.clientWidth, h = canvas.clientHeight;
@@ -329,11 +329,11 @@ function drawKolamRecipe() {
   let note;
   if (used.length === 1) {
     note = `Only speeds ${GROUP_NAMES[used[0]]} are used. That is the rule for 4-way turning symmetry: ` +
-           "the kolam looks the same after every quarter turn.";
+           "the rangoli looks the same after every quarter turn.";
   } else if (used.every(i => i % 2 === 1)) {
-    note = "Only odd speeds are used, so the kolam looks the same after a half turn (upside down).";
+    note = "Only odd speeds are used, so the rangoli looks the same after a half turn (upside down).";
   } else {
-    note = "Every kind of speed is used, so the kolam does not look the same when you turn it.";
+    note = "Every kind of speed is used, so the rangoli does not look the same when you turn it.";
     if (symmetry === "mirror") {
       note += " It is still a mirror image of itself: mirroring doesn't remove any speeds, " +
               "it pairs up the circles' start angles instead.";
@@ -343,7 +343,7 @@ function drawKolamRecipe() {
 }
 
 // Hover or tap a bar to read its numbers
-function showKolamTip(event) {
+function showRangoliTip(event) {
   if (kAllCircles.length === 0) return;
   const canvas = $("kSpectrum");
   const box = canvas.getBoundingClientRect();
@@ -357,16 +357,16 @@ function showKolamTip(event) {
   tip.style.top = (event.clientY - box.top) + "px";
   tip.hidden = false;
 }
-$("kSpectrum").addEventListener("pointermove", showKolamTip);
-$("kSpectrum").addEventListener("pointerdown", showKolamTip);
+$("kSpectrum").addEventListener("pointermove", showRangoliTip);
+$("kSpectrum").addEventListener("pointerdown", showRangoliTip);
 $("kSpectrum").addEventListener("pointerleave", () => { $("kTip").hidden = true; });
-window.addEventListener("resize", drawKolamRecipe);
+window.addEventListener("resize", drawRangoliRecipe);
 
 // ---------- drawing ----------
-function renderKolam(lap) {
-  if (!kolam) return;
+function renderRangoli(lap) {
+  if (!rangoli) return;
   if (view === "circles") {
-    drawScene(kCtx, kCircles, kCirclePath, lap, { dots: kolam.dots, colour: lineColour });
+    drawScene(kCtx, kCircles, kCirclePath, lap, { dots: rangoli.dots, colour: lineColour });
     return;
   }
   const ctx = kCtx;
@@ -378,46 +378,46 @@ function renderKolam(lap) {
   ctx.lineJoin = "round";
 
   if ($("kShowGuide").checked) {
-    strokeLine(ctx, kolam.path, 0, kolam.path.length - 1, "rgba(255, 255, 255, 0.13)", 2);
+    strokeLine(ctx, rangoli.path, 0, rangoli.path.length - 1, "rgba(255, 255, 255, 0.13)", 2);
   }
   if ($("kShowWalls").checked) {
     ctx.strokeStyle = "#ff8c42";
     ctx.lineWidth = 4;
-    for (const [[x0, y0], [x1, y1]] of kolam.walls) {
+    for (const [[x0, y0], [x1, y1]] of rangoli.walls) {
       ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
     }
   }
 
   ctx.fillStyle = "#ffffff";                                // the dots
-  for (const [x, y] of kolam.dots) {
-    ctx.beginPath(); ctx.arc(x, y, kolam.dotRadius, 0, 2 * Math.PI); ctx.fill();
+  for (const [x, y] of rangoli.dots) {
+    ctx.beginPath(); ctx.arc(x, y, rangoli.dotRadius, 0, 2 * Math.PI); ctx.fill();
   }
 
-  const upto = Math.floor(lap * (kolam.path.length - 1));  // the line so far
+  const upto = Math.floor(lap * (rangoli.path.length - 1));  // the line so far
   ctx.shadowColor = lineColour;
   ctx.shadowBlur = 12;
-  strokeLine(ctx, kolam.path, 0, upto, lineColour, 5);
+  strokeLine(ctx, rangoli.path, 0, upto, lineColour, 5);
   ctx.shadowBlur = 0;
 
   // knot look: once both strands of a crossing are drawn, cut a small gap into the lower one
   // and draw the upper one again across the gap
   if ($("kKnot").checked) {
-    for (const { over, under } of kolam.knots) {
+    for (const { over, under } of rangoli.knots) {
       if (over > upto || under > upto) continue;
       ctx.lineCap = "butt";
-      strokeLine(ctx, kolam.path, Math.max(0, under - kolam.gapHalf),
-                 Math.min(upto, under + kolam.gapHalf), "#000", 14);      // the gap
+      strokeLine(ctx, rangoli.path, Math.max(0, under - rangoli.gapHalf),
+                 Math.min(upto, under + rangoli.gapHalf), "#000", 14);      // the gap
       ctx.lineCap = "round";
       ctx.shadowColor = lineColour;
       ctx.shadowBlur = 12;
-      strokeLine(ctx, kolam.path, Math.max(0, over - kolam.overHalf),
-                 Math.min(upto, over + kolam.overHalf), lineColour, 5);   // the upper line
+      strokeLine(ctx, rangoli.path, Math.max(0, over - rangoli.overHalf),
+                 Math.min(upto, over + rangoli.overHalf), lineColour, 5);   // the upper line
       ctx.shadowBlur = 0;
     }
   }
 
   if (lap < 1) {                                           // the pen
-    const [x, y] = kolam.path[upto];
+    const [x, y] = rangoli.path[upto];
     ctx.fillStyle = "#ffd23f";
     ctx.beginPath(); ctx.arc(x, y, 10, 0, 2 * Math.PI); ctx.fill();
   }
@@ -425,8 +425,8 @@ function renderKolam(lap) {
 }
 
 // ---------- controls ----------
-choice("kSym", "data-sym", value => { wantedSymmetry = value; newKolam(); });
-choice("kShape", "data-shape", value => { shape = value; buildKolam(); });
+choice("kSym", "data-sym", value => { wantedSymmetry = value; newRangoli(); });
+choice("kShape", "data-shape", value => { shape = value; buildRangoli(); });
 choice("kColours", "data-colour", value => { lineColour = value; });
 choice("kView", "data-view", value => {
   view = value;
@@ -435,31 +435,31 @@ choice("kView", "data-view", value => {
   if (view === "circles") prepareCircles();
 });
 
-$("newKolam").addEventListener("click", newKolam);
+$("newRangoli").addEventListener("click", newRangoli);
 $("kWeave").addEventListener("input", () => {
   const v = Number($("kWeave").value);
   $("kWeaveOut").textContent = v < 25 ? "few" : v < 50 ? "some" : v < 75 ? "many" : "most";
-  newKolam();
+  newRangoli();
 });
 $("kDots").addEventListener("input", () => {
   $("kDotsOut").textContent = $("kDots").value;
-  newKolam();
+  newRangoli();
 });
-$("kCount").addEventListener("input", () => { if (kAllCircles.length) useKolamCircles(); });
+$("kCount").addEventListener("input", () => { if (kAllCircles.length) useRangoliCircles(); });
 
 $("kSave").addEventListener("click", () => {
-  renderKolam(1);                                          // the finished kolam
-  savePicture(kCanvas, "kolam");
+  renderRangoli(1);                                          // the finished rangoli
+  savePicture(kCanvas, "rangoli");
 });
 
 $("kRecord").addEventListener("click", () => {
-  if (!kolam) return;
+  if (!rangoli) return;
   $("kRecord").disabled = true;
   kReel.start({
     seconds: kTransport.seconds(),
-    filename: "kolam",
-    title: view === "circles" ? "A kolam drawn by circles" : "Drawing a kolam",
-    drawAt: lapPos => { kTransport.lap = lapPos; renderKolam(lapPos); },
+    filename: "rangoli",
+    title: view === "circles" ? "A rangoli drawn by circles" : "Drawing a rangoli",
+    drawAt: lapPos => { kTransport.lap = lapPos; renderRangoli(lapPos); },
     progress: f => { $("kStatus").textContent = `Making the video… ${Math.round(f * 100)}%`; },
     done: (error, note) => {
       $("kStatus").textContent = error ? "The video could not be made: " + error.message : note;
@@ -470,17 +470,17 @@ $("kRecord").addEventListener("click", () => {
 });
 
 // ---------- hooks for app.js ----------
-modes.kolam = {
+modes.rangoli = {
   frame(dt) {
     if (kReel.isRecording()) return;          // the video maker is drawing the frames itself
-    // hold the finished kolam for a moment before starting again
+    // hold the finished rangoli for a moment before starting again
     if (kTransport.playing) kTransport.lap = Math.min(kTransport.lap + dt / kTransport.seconds(), 1.15);
     if (kTransport.lap >= 1.15) kTransport.lap = 0;
-    renderKolam(Math.min(kTransport.lap, 1));
+    renderRangoli(Math.min(kTransport.lap, 1));
     kTransport.sync();
   },
   busy: () => kReel.isRecording(),
-  shown: drawKolamRecipe,
+  shown: drawRangoliRecipe,
 };
 
-newKolam();
+newRangoli();

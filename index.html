@@ -3,21 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Chakra Rekha · every line is made of circles</title>
+  <title>Epicycles · every line is made of circles</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="top">
     <div>
-      <h1>Chakra Rekha</h1>
-      <p class="name-meaning"><em>chakra</em> = wheel, <em>rekha</em> = line</p>
+      <h1>Epicycles</h1>
       <p class="tagline">Every line is made of circles. Build shapes from spinning circles,
-        draw your own and turn it into circles, watch a kolam being drawn, or learn how a circle makes a wave.</p>
+        draw your own and turn it into circles, watch a rangoli being drawn, or learn how a circle makes a wave.</p>
     </div>
     <nav class="tabs" role="tablist" aria-label="Modes">
       <button role="tab" id="tabBuild" aria-controls="build" aria-selected="true">1 · Build with circles</button>
       <button role="tab" id="tabEncode" aria-controls="encode" aria-selected="false">2 · Draw and encode</button>
-      <button role="tab" id="tabKolam" aria-controls="kolamMode" aria-selected="false">3 · Kolam</button>
+      <button role="tab" id="tabRangoli" aria-controls="rangoliMode" aria-selected="false">3 · Rangoli</button>
       <button role="tab" id="tabLearn" aria-controls="learnMode" aria-selected="false">4 · Learn</button>
     </nav>
   </header>
@@ -140,11 +139,11 @@
     </div>
   </section>
 
-  <!-- ===================== MODE 3: kolam ===================== -->
-  <section id="kolamMode" class="mode split" role="tabpanel" aria-labelledby="tabKolam" hidden>
+  <!-- ===================== MODE 3: rangoli ===================== -->
+  <section id="rangoliMode" class="mode split" role="tabpanel" aria-labelledby="tabRangoli" hidden>
     <div class="stage">
-      <canvas id="kolamCanvas" class="screen" width="1000" height="1000"
-              aria-label="A kolam being drawn around a grid of dots"></canvas>
+      <canvas id="rangoliCanvas" class="screen" width="1000" height="1000"
+              aria-label="A rangoli being drawn around a grid of dots"></canvas>
       <div class="transport">
         <button id="kPlay">Pause</button>
         <label class="slider no-out"><span>Moment</span>
@@ -155,10 +154,10 @@
     </div>
 
     <aside class="panel">
-      <p class="lead">A kolam is a line rangoli from South India: one closed line that loops around
-        a grid of dots without ever touching them. Watch how each one is drawn, then let circles draw it.</p>
+      <p class="lead">This rangoli is drawn as one closed line that loops around a grid of dots
+        without ever touching them. Watch how each one is drawn, then let circles draw it.</p>
       <div class="row">
-        <button id="newKolam" class="primary">New kolam</button>
+        <button id="newRangoli" class="primary">New rangoli</button>
         <span class="muted" id="kInfo"></span>
       </div>
 
@@ -218,7 +217,7 @@
         </div>
         <label class="slider" id="kCountRow" hidden><span>Circles</span>
           <input type="range" id="kCount" min="5" max="600" value="250"><output id="kCountOut">250</output></label>
-        <p class="hint" id="kCircleHint" hidden>A kolam is one closed line, so circles can draw it too.
+        <p class="hint" id="kCircleHint" hidden>A rangoli is one closed line, so circles can draw it too.
           Slide down: with few circles the loops melt into soft waves.</p>
       </div>
 
@@ -237,7 +236,7 @@
       </div>
 
       <div class="block">
-        <span class="label">How to draw a kolam by hand</span>
+        <span class="label">How to draw a rangoli by hand</span>
         <ol class="steps">
           <li>Put down the dots in a square grid. Here the grid is turned on its corner, like a diamond.</li>
           <li>Start your line between two dots, never on one.</li>
@@ -424,7 +423,7 @@
   <script src="app.js"></script>
   <script src="build.js"></script>
   <script src="encode.js"></script>
-  <script src="kolam.js"></script>
+  <script src="rangoli.js"></script>
   <script src="learn.js"></script>
   <script>start();</script>
 </body>
