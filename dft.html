@@ -109,6 +109,17 @@ button:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
   font-size: 0.95rem; cursor: pointer;
 }
 .play:hover { background: rgba(255,255,255,0.15); }
+/* the bonus keeps its space reserved, so opening it never moves the text above */
+.bonus { font-size: 0.92rem; color: var(--muted); }
+.bonus-toggle { font: inherit; font-weight: 400; color: rgba(255, 210, 63, 0.7); background: none; border: 0; padding: 0; cursor: pointer; }
+.bonus-toggle:hover { color: var(--accent); }
+.bonus-toggle::before { content: "▸"; display: inline-block; margin-right: 6px; transition: transform 0.25s ease; }
+.bonus.open .bonus-toggle::before { transform: rotate(90deg); }
+.bonus-toggle:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+.bonus-body { visibility: hidden; opacity: 0; transform: translateY(-6px); transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s; }
+.bonus.open .bonus-body { visibility: visible; opacity: 1; transform: none; }
+.bonus-body p { margin-top: 6px; }
+@media (prefers-reduced-motion: reduce) { .bonus-body, .bonus-toggle::before { transition: none; } }
 .hint-inline { font-size: 0.88rem; color: var(--muted); }
 .hint { font-size: 0.88rem; color: var(--muted); border-left: 2px solid var(--line); padding-left: 10px; }
 .goto { font: inherit; color: var(--teal); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
@@ -220,6 +231,10 @@ function arrow(g, x0, y0, x1, y1, col, w = 4) {
 }
 function ring(g, x, y, r, col = C.ring, w = 2) { g.strokeStyle = col; g.lineWidth = w; g.beginPath(); g.arc(x, y, r, 0, 2 * Math.PI); g.stroke(); }
 function dot(g, x, y, r, col) { g.fillStyle = col; g.beginPath(); g.arc(x, y, r, 0, 2 * Math.PI); g.fill(); }
+function labelRow(g, parts, x, y, size = 18) {   // left-aligned text in several colours
+  g.font = `${size}px "Avenir", "Avenir Next", "Nunito Sans", system-ui, sans-serif`;
+  for (const [t, col] of parts) { label(g, t, x, y, col, size, "left"); x += g.measureText(t).width; }
+}
 function labelParts(g, parts, x, y, size = 18) {   // centred text in several colours
   g.font = `${size}px "Avenir", "Avenir Next", "Nunito Sans", system-ui, sans-serif`;
   let px = x - parts.reduce((w, [t]) => w + g.measureText(t).width, 0) / 2;
@@ -314,9 +329,14 @@ const DRAW = {
     seg(g, cx, cy, x, cy, C.x, 6); seg(g, x, cy, x, y, C.y, 6);
     arrow(g, cx, cy, x, y, C.r, 5);
     dot(g, x, y, 9, C.z);
-    label(g, `z = ${X.toFixed(2)} + ${Y.toFixed(2)}i`, x + 14, y - 12, C.z, 22);
+    {   // keep the z label inside the picture: smaller, and flipped to the left near the right edge
+      const txt = `z = ${X.toFixed(2)} + ${Y.toFixed(2)}i`;
+      g.font = `17px "Avenir", "Avenir Next", "Nunito Sans", system-ui, sans-serif`;
+      const w = g.measureText(txt).width, right = x + 14 + w > W - 10;
+      label(g, txt, right ? x - 14 : x + 14, y - 14, C.z, 17, right ? "right" : "left");
+    }
     label(g, `x = ${X.toFixed(2)}`, (cx + x) / 2, cy + 40, C.x, 17, "center");
-    label(g, `y = ${Y.toFixed(2)}`, x + 10, (cy + y) / 2 + 6, C.y, 17);
+    if (Y > 0.4) label(g, `y = ${Y.toFixed(2)}`, x + 10, (cy + y) / 2 + 6, C.y, 17);   // hide when it would sit on the point
     label(g, "circle of radius r = 4", cx + R * U * 0.71 + 10, cy + R * U * 0.71 + 18, C.r, 16);
   },
   // 3. adding circles
@@ -361,9 +381,9 @@ const DRAW = {
       angleArc(g, cx, cy, 36, th, C.x);
       const [x, y] = P(cx, cy, R * Math.cos(th), R * Math.sin(th));
       arrow(g, cx, cy, x, y, C.r, 5); dot(g, x, y, 7, C.pen);
-      label(g, `ω = 2π/${T} = ${w.toFixed(2)} rad/s`, cx, 410, C.x, 18, "center");
-      label(g, `T = ${T} s per turn`, cx, 438, C.text, 17, "center");
-      label(g, `θ = ω·t = ${th.toFixed(2)} rad`, cx, 470, C.pen, 18, "center");
+      label(g, `ω = 2π/${T} = ${w.toFixed(2)} rad/s`, cx, 440, C.pen, 18, "center");
+      label(g, `T = ${T} s per turn`, cx, 410, C.text, 17, "center");
+      label(g, `θ = ω·t = ${th.toFixed(2)} rad`, cx, 470, C.x, 18, "center");
     });
     seg(g, 320, 80, 320, 480, C.ring, 1, [4, 6]);
     label(g, "twice the ω: a full turn takes half the time", 480, 505, C.pen, 16, "center");
@@ -380,10 +400,10 @@ const DRAW = {
     const tx = 430;
     label(g, `t = ${t.toFixed(1)} s`, tx, 90, C.pen, 24);
     label(g, `T = ${PERIOD} s per lap`, tx, 124, C.text, 18);
-    label(g, "base circle: k = 1", tx, 220, C.r, 18);
-    label(g, `θ₁ = 2π·1·t ÷ T`, tx, 246, C.text, 17);
-    label(g, "arrow 2: k = 2", tx, 290, C.z, 18);
-    label(g, `θ₂ = 2π·2·t ÷ T`, tx, 316, C.text, 17);
+    labelRow(g, [["circle 1, ", C.r], ["k = 1", C.y]], tx, 220, 18);
+    labelRow(g, [["θ₁ = 2π·", C.text], ["1", C.y], ["·t ÷ T", C.text]], tx, 246, 17);
+    labelRow(g, [["circle 2, ", C.z], ["k = 2", C.y]], tx, 290, 18);
+    labelRow(g, [["θ₂ = 2π·", C.text], ["2", C.y], ["·t ÷ T", C.text]], tx, 316, 17);
     seg(g, 110, 470, 600, 470, C.ring, 8);
     seg(g, 110, 470, 110 + 490 * p, 470, C.x, 8);
     label(g, "one lap", 355, 450, C.faint, 15, "center");
@@ -395,7 +415,6 @@ const DRAW = {
     pathLine(g, heartRaw, cx, cy, C.pen, 4, n);
     if (n > 0 && n < 400) { const [x, y] = P(cx, cy, ...heartRaw[n - 1]); dot(g, x, y, 8, C.x); }
     if (n >= 400) {
-      label(g, "which arrows draw this?", cx, 40, C.text, 19, "center");
     }
   },
   // card 5's arrows: dashed = where each starts (c₁, c₂), solid = turned by now
@@ -624,12 +643,13 @@ const CARDS = [
 
   { draw: "plane", title: "The complex plane",
     body: R`<p>The floor and the wall now become the two axes of a <b>complex plane</b>.</p>
-      <p>Let \({\color[RGB]{76,201,240}z} = {\color[RGB]{255,210,63}x} + i{\color[RGB]{61,220,151}y}\).</p>`,
+      <p>Let \({\color[RGB]{76,201,240}z}\) be the point on the circle (the arrow tip).</p>`,
     formula: R`\[ {\color[RGB]{76,201,240}z} = {\color[RGB]{255,210,63}x} + i\,{\color[RGB]{61,220,151}y} = {\color[RGB]{255,77,109}r}{\color[RGB]{255,210,63}\cos\theta} + i\,{\color[RGB]{255,77,109}r}{\color[RGB]{61,220,151}\sin\theta} = {\color[RGB]{255,77,109}r}e^{i\theta} \]`,
-    after: R`<p>Using Euler's formula, \(e^{i\theta} = \cos\theta + i\sin\theta\), we can set \({\color[RGB]{76,201,240}z} = {\color[RGB]{255,77,109}r}e^{i\theta}\): an arrow of length \({\color[RGB]{255,77,109}r}\) at angle \(\theta\). Turning by \(a\) means multiplying by \(e^{ia}\).</p>` },
+    after: R`<p>Using Euler's formula, \(e^{i\theta} = \cos\theta + i\sin\theta\), we can set \({\color[RGB]{76,201,240}z} = {\color[RGB]{255,77,109}r}e^{i\theta}\): an arrow of length \({\color[RGB]{255,77,109}r}\) at angle \(\theta\).</p>
+      <div class="bonus"><button class="bonus-toggle" aria-expanded="false">Bonus: turning an arrow</button><div class="bonus-body"><p>Multiplying \(z\) by \(e^{ia}\) turns the arrow by the angle \(a\): \(re^{i\theta} \cdot e^{ia} = re^{i(\theta + a)}\). Same length, new angle. It turns anticlockwise; \(e^{-ia}\) turns clockwise.</p></div></div>` },
 
   { draw: "sum", title: "Going beyond a single circle",
-    body: R`<p>For more circles, <b>add</b> arrows tip to tail. The last tip holds the pen.</p>
+    body: R`<p>For more circles, <b>add</b> arrows tip to tail. Imagine a <b>pen</b> on the last tip, creating the mesmerizing drawing.</p>
       <p>A circle riding on a circle is an <b>epicycle</b>.</p>
       <p>\(z_k\) is the \(k\)-th circle's arrow.</p>`,
     formula: R`\[ z = {\color[RGB]{179,136,255}z_1} + {\color[RGB]{255,140,66}z_2} + {\color[RGB]{247,37,133}z_3} + {\color[RGB]{192,255,62}z_4} = \sum_k z_k \]`,
@@ -638,23 +658,21 @@ const CARDS = [
 
   { draw: "omega", title: "How fast the point revolves",
     body: R`<p>\(\omega\) is the <b>angle an arrow turns per second</b>, in radians per second.</p>
-      <p>After \(t\) seconds it has turned \(\theta = \omega t\).</p>
+      <p>After \(t\) seconds it has turned \({\color[RGB]{255,210,63}\theta} = \omega t\).</p>
       <p>If one full turn (\(2\pi\) radians) takes \(T\) seconds, then the <b>angular speed</b> is \(\omega = 2\pi / T\).</p>`,
-    formula: R`\[ \theta = \omega\, t = \frac{2\pi t}{T} \]` },
+    formula: R`\[ {\color[RGB]{255,210,63}\theta} = \omega\, t = \frac{2\pi t}{T} \]` },
 
   { draw: "time", title: "Each circle's turns per lap",
-    body: R`<p>We label each circle by \(k\), the <b>number of whole turns it makes per lap</b>. So every arrow is back where it began at the start of the lap.</p>
-      <p>\(\theta_k\) is how far circle \(k\)'s arrow has turned so far: the \(\theta\) of <button class="goto" data-card="1">card 1</button>, now for circle \(k\).</p>`,
-    formula: R`\[ \theta_k = \omega_k\, t = \frac{2\pi k\, t}{T}, \quad \text{where } \omega_k = \frac{2\pi k}{T} \]`,
-    after: R`<p>When \(k = 1\), it turns exactly once per lap: the <b>base circle</b> <span style="white-space: nowrap">(\(k = -1\)</span> turns once the other way).</p>` },
+    body: R`<p>Each circle makes a <b>whole number of turns per lap</b>. Call that number \({\color[RGB]{61,220,151}k}\), and use it as the circle's name: <b>circle \({\color[RGB]{61,220,151}k}\)</b>.</p>
+      <p>\(\theta_{\color[RGB]{61,220,151}k}\) is how far circle \({\color[RGB]{61,220,151}k}\)'s arrow has turned so far: the \(\theta\) of <button class="goto" data-card="1">card 1</button>, now for circle \({\color[RGB]{61,220,151}k}\).</p>`,
+    formula: R`\[ \theta_{\color[RGB]{61,220,151}k} = \omega_{\color[RGB]{61,220,151}k}\, t = \frac{2\pi {\color[RGB]{61,220,151}k}\, t}{T}, \quad \text{where } \omega_{\color[RGB]{61,220,151}k} = \frac{2\pi {\color[RGB]{61,220,151}k}}{T} \]`,
+    after: R`<div class="bonus"><button class="bonus-toggle" aria-expanded="false">Bonus tip</button><div class="bonus-body"><p>When \({\color[RGB]{61,220,151}k} = 1\), the arrow makes exactly one full turn per lap: <b style="color: #ff4d6d">circle 1</b> <span style="white-space: nowrap">(\({\color[RGB]{61,220,151}k} = -1\)</span> turns once the other way).</p></div></div>` },
 
-  { draw: "puzzle", title: "From a drawing to epicycles",
-    body: R`<p>The puzzle: given the drawing, how do we find every \(c_k\)?</p>
-      <p style="color: var(--accent)">Welcome to the job of the <b>Discrete Fourier Transform (DFT)</b>!</p>` },
+  { draw: "puzzle", title: "Basics done!<br>How do we find the circles behind any closed drawing?",
+    body: R`<p style="color: var(--accent)">Welcome to the world of the <b>Discrete Fourier Transform (DFT)</b>!</p>` },
 
   { draw: "startTurn", title: "Where each arrow starts",
-    body: R`<p>On <button class="goto" data-card="3">card 3</button>, the pen is \(z(t) = \sum_k z_k(t)\), where \(z_k(t)\) is arrow \(k\) at time \(t\): each arrow is a <b>function of time</b>.</p>
-      <p>Let \(c_k\) be arrow \(k\) at the start of the lap: one per circle. <span class="hint-inline">(hint: \(c_k\) is not just the radius \(r_k\))</span></p>
+    body: R`<p>Let \(c_k\) be arrow \(k\) at the start of the lap: one per circle. <span class="hint-inline">(hint: \(c_k\) is not just the radius \(r_k\))</span></p>
       <p>As time runs, arrow \(k\) is \(c_k\) turned by \(\theta_k\). Over one lap, the pen traces the drawing:</p>`,
     formula: R`\[ \begin{gathered} z(t) = \sum_k {\color[RGB]{255,210,63}\overbrace{\rule{0pt}{16pt} {\color[RGB]{242,243,245}c_k}}^{\mathclap{\text{where it starts}}}} \, {\color[RGB]{255,210,63}\underbrace{\rule[-8pt]{0pt}{0pt} {\color[RGB]{242,243,245}e^{i 2\pi k t / T}}}_{\mathclap{\text{how much it turns}}}} \\[10pt] \text{where} \quad c_k = z_k(0) \end{gathered} \]` },
 
@@ -731,6 +749,8 @@ function setPaused(v) {
 }
 document.addEventListener("click", e => {
   if (e.target.id === "play" || e.target === canvas) setPaused(!paused);
+  const bt = e.target.closest && e.target.closest(".bonus-toggle");
+  if (bt) { const box = bt.parentElement, open = !box.classList.contains("open"); box.classList.toggle("open", open); bt.setAttribute("aria-expanded", open); }
   if (e.target.classList && e.target.classList.contains("goto")) go(+e.target.dataset.card - 1);
 });
 const canvas = document.createElement("canvas");
@@ -755,7 +775,7 @@ function render() {
   const builds = index === 0 ? "the first step" : `builds on card ${index}`;
   const symbols = (c.symbols || []).map(([s, d]) => `<span><b>${s}</b> ${d}</span>`).join("");
   cardEl.innerHTML = cardHTML(c);
-  canvas.setAttribute("aria-label", c.title);
+  canvas.setAttribute("aria-label", c.title.replace(/<[^>]+>/g, " "));
   typeset();
   cardEl.querySelector(".pic").appendChild(canvas);
   cardEl.style.setProperty("--from", direction > 0 ? "24px" : "-24px");
@@ -802,7 +822,7 @@ function go(i) {
 const dotsEl = document.getElementById("dots");
 CARDS.forEach((c, i) => {
   const b = document.createElement("button");
-  b.textContent = i + 1; b.setAttribute("aria-label", `Card ${i + 1}: ${c.title}`);
+  b.textContent = i + 1; b.setAttribute("aria-label", `Card ${i + 1}: ${c.title.replace(/<[^>]+>/g, " ")}`);
   b.addEventListener("click", () => go(i));
   dotsEl.appendChild(b);
 });
